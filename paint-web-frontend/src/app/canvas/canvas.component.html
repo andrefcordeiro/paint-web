@@ -1,0 +1,21 @@
+<div id="container-canvas">
+  <div id="toolbar">
+    <button mat-button (click)="changeMode('paintbrush')">
+      <mat-icon fontIcon="brush icon"></mat-icon>
+    </button>
+    <button mat-button (click)="changeMode('eraser')">
+      <mat-icon fontIcon="stop icon"></mat-icon>
+    </button>
+    <button mat-button (click)="clearContent()">
+      <mat-icon fontIcon="clear icon "></mat-icon>
+    </button>
+  </div>
+  <canvas
+    #canvas
+    (mousemove)="onMouseMove($event)"
+    (mousedown)="onMouseDown($event)"
+    (mouseup)="onMouseUp($event)"
+    (mouseout)="onMouseOut($event)"
+    (contextmenu)="onRightClick($event)"
+  ></canvas>
+</div>
