@@ -9,7 +9,10 @@
   // margin: 10px;
   // top: 0;
   // bottom: 0;
-  // cursor: wait;
+}
+
+#canvas {
+  cursor: url("../../assets/icons/circle-cursor.cur"), auto;
 }
 
 #toolbar {

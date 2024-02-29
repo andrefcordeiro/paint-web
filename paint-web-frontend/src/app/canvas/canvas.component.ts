@@ -22,7 +22,7 @@ export class CanvasComponent {
 
   mouseDown = false;
 
-  mode = 'paintbrush';
+  tool = 'paintbrush';
 
   get canvasElement(): HTMLCanvasElement {
     return this.canvas.nativeElement;
@@ -54,15 +54,11 @@ export class CanvasComponent {
 
   onMouseMove(event: MouseEvent) {
     if (this.mouseDown) {
-      if (this.mode === 'paintbrush') {
-        this.draw(event.clientX, event.clientY);
-      } else if (this.mode === 'eraser') {
-        this.erase(event.clientX, event.clientY);
-      }
+      this.draw(event.clientX, event.clientY);
     }
   }
 
-  onMouseOut(event: MouseEvent) {
+  onMouseOut() {
     this.mouseDown = false;
   }
 
@@ -71,15 +67,14 @@ export class CanvasComponent {
     this.context.stroke();
   }
 
-  erase(offsetX: number, offsetY: number) {
-    this.context.lineTo(offsetX, offsetY);
-    this.context.stroke();
-  }
+  /**
+   * Executed when tool is changed.
+   * @param tool Selected tool.
+   */
+  changeTool(tool: string) {
+    this.tool = tool;
 
-  changeMode(mode: string) {
-    this.mode = mode;
-
-    if (mode === 'eraser') {
+    if (tool === 'eraser') {
       this.context.strokeStyle = 'white';
     } else {
       this.context.strokeStyle = 'black';
@@ -97,7 +92,6 @@ export class CanvasComponent {
 
   onRightClick(event: Event) {
     event.preventDefault();
-    this.context.lineWidth += 10;
     console.log('Right click');
   }
 }

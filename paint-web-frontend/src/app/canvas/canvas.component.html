@@ -1,9 +1,9 @@
 <div id="container-canvas">
   <div id="toolbar">
-    <button mat-button (click)="changeMode('paintbrush')">
+    <button mat-button (click)="changeTool('paintbrush')">
       <mat-icon fontIcon="brush icon"></mat-icon>
     </button>
-    <button mat-button (click)="changeMode('eraser')">
+    <button mat-button (click)="changeTool('eraser')">
       <mat-icon fontIcon="stop icon"></mat-icon>
     </button>
     <button mat-button (click)="clearContent()">
@@ -11,11 +11,12 @@
     </button>
   </div>
   <canvas
+    id="canvas"
     #canvas
     (mousemove)="onMouseMove($event)"
     (mousedown)="onMouseDown($event)"
     (mouseup)="onMouseUp($event)"
-    (mouseout)="onMouseOut($event)"
+    (mouseout)="onMouseOut()"
     (contextmenu)="onRightClick($event)"
   ></canvas>
 </div>
