@@ -1,4 +1,7 @@
 import { Component, ElementRef, HostListener, ViewChild } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
+import { ModalToolPropertiesComponent } from './modal-tool-properties/modal-tool-properties.component';
+import { ToolProperties } from '../interfaces/tool-properties.interface';
 
 @Component({
   selector: 'app-canvas',
@@ -23,6 +26,8 @@ export class CanvasComponent {
   mouseDown = false;
 
   tool = 'paintbrush';
+
+  constructor(public dialog: MatDialog) {}
 
   get canvasElement(): HTMLCanvasElement {
     return this.canvas.nativeElement;
@@ -77,11 +82,14 @@ export class CanvasComponent {
     if (tool === 'eraser') {
       this.context.strokeStyle = 'white';
     } else {
-      this.context.strokeStyle = 'black';
+      this.context.strokeStyle = '#000000';
     }
   }
 
-  clearContent() {
+  /**
+   * Clear all page content
+   */
+  clearContent(): void {
     this.context.clearRect(
       0,
       0,
@@ -90,8 +98,27 @@ export class CanvasComponent {
     );
   }
 
-  onRightClick(event: Event) {
+  getToolProperties(): ToolProperties {
+    return { size: this.context.lineWidth, color: this.context.strokeStyle };
+  }
+
+  setContextProperties(toolProperties: ToolProperties) {
+    this.context.strokeStyle = toolProperties.color;
+    this.context.lineWidth = toolProperties.size;
+  }
+
+  onRightClick(event: MouseEvent) {
     event.preventDefault();
-    console.log('Right click');
+    const dialogRef = this.dialog.open(ModalToolPropertiesComponent, {
+      data: this.getToolProperties(),
+      width: '300px',
+      height: '250px',
+    });
+
+    dialogRef.afterClosed().subscribe((data: ToolProperties) => {
+      if (data) {
+        this.setContextProperties(data);
+      }
+    });
   }
 }
