@@ -1,7 +1,7 @@
 import { Component, ElementRef, HostListener, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ModalToolPropertiesComponent } from './modal-tool-properties/modal-tool-properties.component';
-import { ToolProperties } from '../interfaces/tool-properties.interface';
+import { CanvasTool } from '../interfaces/canvas-tool.interface';
 
 @Component({
   selector: 'app-canvas',
@@ -10,28 +10,30 @@ import { ToolProperties } from '../interfaces/tool-properties.interface';
 })
 export class CanvasComponent {
   /**
-   * Canvas
+   * Canvas.
    */
   @ViewChild('canvas', { static: false }) canvas: ElementRef;
 
   /**
-   * Context
+   * Context.
    */
   context: CanvasRenderingContext2D;
 
-  // width = 100;
-
-  // height = 100;
-
   mouseDown = false;
 
-  tool = 'paintbrush';
+  /**
+   * Selected tool.
+   */
+  tool: CanvasTool = { name: 'paintbrush', size: 5, color: '#000000' };
 
-  constructor(public dialog: MatDialog) {}
-
+  /**
+   * Return the nativeElement of the canvas.
+   */
   get canvasElement(): HTMLCanvasElement {
     return this.canvas.nativeElement;
   }
+
+  constructor(public dialog: MatDialog) {}
 
   ngAfterViewInit(): void {
     this.canvasElement.style.width = '100%';
@@ -41,11 +43,12 @@ export class CanvasComponent {
     this.canvasElement.height = this.canvasElement.offsetHeight;
 
     this.context = this.canvasElement.getContext('2d')!;
-    // posibilidades de personalização
-    this.context.lineWidth = 5;
     this.context.lineJoin = 'round';
   }
 
+  /**
+   * Mouse events.
+   */
   onMouseDown(event: MouseEvent) {
     this.mouseDown = true;
     this.context.beginPath();
@@ -67,6 +70,11 @@ export class CanvasComponent {
     this.mouseDown = false;
   }
 
+  /**
+   * Function to draw on the canvas.
+   * @param offsetX X coordinate.
+   * @param offsetY Y coordinate.
+   */
   draw(offsetX: number, offsetY: number) {
     this.context.lineTo(offsetX, offsetY);
     this.context.stroke();
@@ -77,12 +85,12 @@ export class CanvasComponent {
    * @param tool Selected tool.
    */
   changeTool(tool: string) {
-    this.tool = tool;
-
     if (tool === 'eraser') {
-      this.context.strokeStyle = 'white';
-    } else {
-      this.context.strokeStyle = '#000000';
+      this.tool.color = 'white';
+      this.setContextProperties(this.tool);
+    } else if (tool === 'paintbrush') {
+      this.tool.color = '#000';
+      this.setContextProperties(this.tool);
     }
   }
 
@@ -98,24 +106,29 @@ export class CanvasComponent {
     );
   }
 
-  getToolProperties(): ToolProperties {
-    return { size: this.context.lineWidth, color: this.context.strokeStyle };
+  /**
+   * Set the properties of the selected tool in the canvas context.
+   * @param canvasTool Tool's properties.
+   */
+  setContextProperties(canvasTool: CanvasTool) {
+    this.context.strokeStyle = canvasTool.color;
+    this.context.lineWidth = canvasTool.size;
+    this.tool = canvasTool;
   }
 
-  setContextProperties(toolProperties: ToolProperties) {
-    this.context.strokeStyle = toolProperties.color;
-    this.context.lineWidth = toolProperties.size;
-  }
-
+  /**
+   * Function called when the user right click on the canvas.
+   * @param event Mouse event.
+   */
   onRightClick(event: MouseEvent) {
     event.preventDefault();
     const dialogRef = this.dialog.open(ModalToolPropertiesComponent, {
-      data: this.getToolProperties(),
+      data: this.tool,
       width: '300px',
       height: '250px',
     });
 
-    dialogRef.afterClosed().subscribe((data: ToolProperties) => {
+    dialogRef.afterClosed().subscribe((data: CanvasTool) => {
       if (data) {
         this.setContextProperties(data);
       }
