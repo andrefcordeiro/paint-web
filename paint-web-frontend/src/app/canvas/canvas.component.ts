@@ -57,9 +57,11 @@ export class CanvasComponent {
    * Mouse events.
    */
   onMouseDown(event: MouseEvent) {
-    this.mouseDown = true;
-    this.context.beginPath();
-    this.draw(event.clientX, event.clientY);
+    if (event.button === 0) {
+      this.mouseDown = true;
+      this.context.beginPath();
+      this.draw(event.clientX, event.clientY);
+    }
   }
 
   onMouseUp(event: MouseEvent) {
