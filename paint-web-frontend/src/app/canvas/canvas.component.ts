@@ -35,7 +35,14 @@ export class CanvasComponent {
 
   constructor(public dialog: MatDialog) {}
 
-  ngAfterViewInit(): void {
+  ngAfterViewInit() {
+    this.createCanvas();
+  }
+
+  /**
+   * Function to initialize canvas properties.
+   */
+  private createCanvas() {
     this.canvasElement.style.width = '100%';
     this.canvasElement.style.height = '100%';
 
@@ -43,7 +50,6 @@ export class CanvasComponent {
     this.canvasElement.height = this.canvasElement.offsetHeight;
 
     this.context = this.canvasElement.getContext('2d')!;
-
     this.setContextProperties(this.tool);
   }
 
@@ -73,11 +79,14 @@ export class CanvasComponent {
 
   /**
    * Function to draw on the canvas.
-   * @param offsetX X coordinate.
-   * @param offsetY Y coordinate.
+   * @param x X coordinate.
+   * @param y Y coordinate.
    */
-  draw(offsetX: number, offsetY: number) {
-    this.context.lineTo(offsetX, offsetY);
+  private draw(x: number, y: number) {
+    this.context.lineTo(
+      x - this.canvasElement.offsetLeft,
+      y - this.canvasElement.offsetTop
+    );
     this.context.stroke();
   }
 
@@ -99,7 +108,7 @@ export class CanvasComponent {
   /**
    * Clear all page content
    */
-  clearContent(): void {
+  clearContent() {
     this.context.clearRect(
       0,
       0,
