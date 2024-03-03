@@ -12,7 +12,7 @@ export class ModalToolPropertiesComponent {
   /**
    * Data passed to the modal.
    */
-  data: CanvasTool;
+  toolData: CanvasTool;
 
   /**
    * Form with the properties values.
@@ -23,21 +23,32 @@ export class ModalToolPropertiesComponent {
     public dialogRef: MatDialogRef<ModalToolPropertiesComponent>,
     @Inject(MAT_DIALOG_DATA) public dialogData: CanvasTool
   ) {
-    this.data = dialogData;
+    this.toolData = dialogData;
 
     this.propertiesForm = new FormGroup({
-      size: new FormControl(this.data.size),
-      color: new FormControl(this.data.color),
+      size: new FormControl(this.toolData.size),
+      color: new FormControl(this.toolData.color),
     });
   }
 
   ngOnInit() {
     this.dialogRef.backdropClick().subscribe(() => {
       this.dialogRef.close({
-        name: this.data.name,
+        name: this.toolData.name,
         size: this.propertiesForm.value.size,
-        color: this.propertiesForm.value.color,
+        color: this.propertiesForm.value.color
+          ? this.propertiesForm.value.color
+          : this.toolData.color,
       });
     });
+  }
+
+  /**
+   * Function to determine if the color input should be displayed.
+   * @returns Boolean
+   */
+  shouldDisplayColorInput() {
+    const toolsNames = ['paintbrush'];
+    return toolsNames.includes(this.toolData.name);
   }
 }

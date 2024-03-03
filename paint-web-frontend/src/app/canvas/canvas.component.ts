@@ -43,7 +43,8 @@ export class CanvasComponent {
     this.canvasElement.height = this.canvasElement.offsetHeight;
 
     this.context = this.canvasElement.getContext('2d')!;
-    this.context.lineJoin = 'round';
+
+    this.setContextProperties(this.tool);
   }
 
   /**
@@ -87,11 +88,12 @@ export class CanvasComponent {
   changeTool(tool: string) {
     if (tool === 'eraser') {
       this.tool.color = 'white';
-      this.setContextProperties(this.tool);
+      this.tool.name = 'eraser';
     } else if (tool === 'paintbrush') {
       this.tool.color = '#000';
-      this.setContextProperties(this.tool);
+      this.tool.name = 'paintbrush';
     }
+    this.setContextProperties(this.tool);
   }
 
   /**
@@ -113,6 +115,8 @@ export class CanvasComponent {
   setContextProperties(canvasTool: CanvasTool) {
     this.context.strokeStyle = canvasTool.color;
     this.context.lineWidth = canvasTool.size;
+    this.context.lineJoin = 'round';
+
     this.tool = canvasTool;
   }
 

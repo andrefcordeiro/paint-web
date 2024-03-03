@@ -1,13 +1,13 @@
 <div id="container">
   <form [formGroup]="propertiesForm">
-    <mat-card>
+    <div class="input">
       <mat-label> Size </mat-label>
       <mat-slider min="1" max="100">
         <input matSliderThumb formControlName="size" />
       </mat-slider>
-    </mat-card>
+    </div>
 
-    <mat-card>
+    <div class="input" *ngIf="shouldDisplayColorInput()">
       <mat-label> Color </mat-label>
       <mat-form-field class="example-full-width">
         <input
@@ -18,6 +18,6 @@
           formControlName="color"
         />
       </mat-form-field>
-    </mat-card>
+    </div>
   </form>
 </div>
