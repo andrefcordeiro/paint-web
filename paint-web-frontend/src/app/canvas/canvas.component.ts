@@ -80,6 +80,22 @@ export class CanvasComponent {
   }
 
   /**
+   * Function to handle keyboard event and change selected tool.
+   * @param event Keyboard event.
+   */
+  @HostListener('document:keyup', ['$event'])
+  private handleKeyboardEvent(event: KeyboardEvent) {
+    const key = event.key;
+
+    const keysTools: { [key: string]: string } = {
+      e: 'eraser',
+      b: 'paintbrush',
+    };
+
+    this.changeTool(keysTools[key]);
+  }
+
+  /**
    * Function to draw on the canvas.
    * @param x X coordinate.
    * @param y Y coordinate.
