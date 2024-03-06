@@ -165,4 +165,17 @@ export class CanvasComponent {
       }
     });
   }
+
+  /**
+   * Function called to download the canvas content as an image.
+   */
+  downloadImage() {
+    var image = this.canvasElement.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.href = image;
+    link.download = 'canvas-image.png';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 }
