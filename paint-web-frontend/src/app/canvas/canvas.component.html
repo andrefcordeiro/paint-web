@@ -1,17 +1,15 @@
 <div id="toolbar">
-  <button mat-button (click)="changeTool('paintbrush')">
-    <mat-icon fontIcon="brush icon"></mat-icon>
-  </button>
-  <button mat-button (click)="changeTool('eraser')">
-    <mat-icon fontIcon="stop icon"></mat-icon>
-  </button>
-  <button mat-button (click)="clearContent()">
-    <mat-icon fontIcon="clear icon"></mat-icon>
-  </button>
-  <button mat-button (click)="downloadImage()">
-    <mat-icon fontIcon="save"></mat-icon>
-  </button>
+  <ng-container *ngFor="let t of tools">
+    <button
+      mat-button
+      (click)="changeTool(t.name)"
+      [ngClass]="{ 'tool-selected': tool.name === t.name }"
+    >
+      <mat-icon fontIcon="{{ t.iconName }}"></mat-icon>
+    </button>
+  </ng-container>
 </div>
+
 <div id="container-canvas">
   <canvas
     id="canvas"

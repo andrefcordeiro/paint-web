@@ -19,7 +19,32 @@ export class CanvasComponent {
    */
   context: CanvasRenderingContext2D;
 
+  /**
+   * Flag that determines whether the left mouse button is being pressed.
+   */
   mouseDown = false;
+
+  /**
+   * Available tools.
+   */
+  tools = [
+    {
+      name: 'paintbrush',
+      iconName: 'brush icon',
+    },
+    {
+      name: 'eraser',
+      iconName: 'stop icon',
+    },
+    {
+      name: 'clear',
+      iconName: 'clear icon',
+    },
+    {
+      name: 'save-canvas',
+      iconName: 'save',
+    },
+  ];
 
   /**
    * Selected tool.
