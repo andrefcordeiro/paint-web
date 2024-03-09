@@ -2,7 +2,7 @@
   <ng-container *ngFor="let t of tools">
     <button
       mat-button
-      (click)="changeTool(t.name)"
+      (click)="t.onclickFunction(t.name)"
       [ngClass]="{ 'tool-selected': tool.name === t.name }"
     >
       <mat-icon fontIcon="{{ t.iconName }}"></mat-icon>

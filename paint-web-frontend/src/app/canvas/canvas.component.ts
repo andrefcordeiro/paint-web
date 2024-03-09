@@ -31,18 +31,22 @@ export class CanvasComponent {
     {
       name: 'paintbrush',
       iconName: 'brush icon',
+      onclickFunction: this.changeTool.bind(this),
     },
     {
       name: 'eraser',
       iconName: 'stop icon',
+      onclickFunction: this.changeTool.bind(this),
     },
     {
       name: 'clear',
       iconName: 'clear icon',
+      onclickFunction: this.clearContent.bind(this),
     },
     {
       name: 'save-canvas',
       iconName: 'save',
+      onclickFunction: this.downloadImage.bind(this),
     },
   ];
 
