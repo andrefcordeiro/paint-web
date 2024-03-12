@@ -3,7 +3,7 @@
     <button
       mat-button
       (click)="t.onclickFunction(t.name)"
-      [ngClass]="{ 'tool-selected': tool.name === t.name }"
+      [ngClass]="{ 'tool-selected': selectedTool.name === t.name }"
     >
       <mat-icon fontIcon="{{ t.iconName }}"></mat-icon>
     </button>

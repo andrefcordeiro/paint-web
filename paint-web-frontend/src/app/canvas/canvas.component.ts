@@ -31,12 +31,12 @@ export class CanvasComponent {
     {
       name: 'paintbrush',
       iconName: 'brush icon',
-      onclickFunction: this.changeTool.bind(this),
+      onclickFunction: this.setSelectedTool.bind(this),
     },
     {
       name: 'eraser',
       iconName: 'stop icon',
-      onclickFunction: this.changeTool.bind(this),
+      onclickFunction: this.setSelectedTool.bind(this),
     },
     {
       name: 'clear',
@@ -53,7 +53,15 @@ export class CanvasComponent {
   /**
    * Selected tool.
    */
-  tool: CanvasTool = { name: 'paintbrush', size: 5, color: '#000000' };
+  selectedTool: CanvasTool = { name: 'paintbrush', size: 5, color: '#000000' };
+
+  /**
+   * State of each avaliable tool.
+   */
+  toolsState: CanvasTool[] = [
+    { name: 'paintbrush', size: 5, color: '#000000' },
+    { name: 'eraser', size: 5, color: 'white' },
+  ];
 
   /**
    * Return the nativeElement of the canvas.
@@ -79,7 +87,7 @@ export class CanvasComponent {
     this.canvasElement.height = this.canvasElement.offsetHeight;
 
     this.context = this.canvasElement.getContext('2d')!;
-    this.setContextProperties(this.tool);
+    this.setContextProperties();
   }
 
   /**
@@ -121,7 +129,7 @@ export class CanvasComponent {
       b: 'paintbrush',
     };
 
-    this.changeTool(keysTools[key]);
+    this.setSelectedTool(keysTools[key]);
   }
 
   /**
@@ -138,22 +146,7 @@ export class CanvasComponent {
   }
 
   /**
-   * Executed when tool is changed.
-   * @param tool Selected tool.
-   */
-  changeTool(tool: string) {
-    if (tool === 'eraser') {
-      this.tool.color = 'white';
-      this.tool.name = 'eraser';
-    } else if (tool === 'paintbrush') {
-      this.tool.color = '#000';
-      this.tool.name = 'paintbrush';
-    }
-    this.setContextProperties(this.tool);
-  }
-
-  /**
-   * Clear all page content
+   * Clear all page content.
    */
   clearContent() {
     this.context.clearRect(
@@ -165,15 +158,41 @@ export class CanvasComponent {
   }
 
   /**
-   * Set the properties of the selected tool in the canvas context.
-   * @param canvasTool Tool's properties.
+   * Executed when tool is changed.
+   * @param tool Selected tool.
    */
-  setContextProperties(canvasTool: CanvasTool) {
-    this.context.strokeStyle = canvasTool.color;
-    this.context.lineWidth = canvasTool.size;
-    this.context.lineJoin = 'round';
+  private setSelectedTool(name: string) {
+    const selectedToolState: CanvasTool | undefined = this.toolsState.find(
+      (tState) => tState.name === name
+    );
 
-    this.tool = canvasTool;
+    if (selectedToolState) {
+      this.selectedTool = selectedToolState;
+      this.setContextProperties();
+    }
+  }
+
+  /**
+   * Update the stored state of the selected tool.
+   * @param tool Selected tool.
+   */
+  private updateSelectedToolState(tool: CanvasTool) {
+    const indexToolState = this.toolsState.findIndex(
+      (tState) => tState.name === tool.name
+    );
+
+    this.toolsState[indexToolState] = tool;
+    this.selectedTool = tool;
+    this.setContextProperties();
+  }
+
+  /**
+   * Set the properties of the selected tool in the canvas context.
+   */
+  setContextProperties() {
+    this.context.strokeStyle = this.selectedTool.color;
+    this.context.lineWidth = this.selectedTool.size;
+    this.context.lineJoin = 'round';
   }
 
   /**
@@ -183,14 +202,14 @@ export class CanvasComponent {
   onRightClick(event: MouseEvent) {
     event.preventDefault();
     const dialogRef = this.dialog.open(ModalToolPropertiesComponent, {
-      data: this.tool,
+      data: this.selectedTool,
       width: '300px',
       height: '250px',
     });
 
     dialogRef.afterClosed().subscribe((data: CanvasTool) => {
       if (data) {
-        this.setContextProperties(data);
+        this.updateSelectedToolState(data);
       }
     });
   }
