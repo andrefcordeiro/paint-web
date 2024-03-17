@@ -56,7 +56,7 @@ export class CanvasComponent {
     },
     {
       name: 'save-canvas',
-      iconName: 'save',
+      iconName: 'get_app icon',
       onclickFunction: this.downloadImage.bind(this),
     },
   ];
