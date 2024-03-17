@@ -51,7 +51,7 @@ export class CanvasComponent {
     },
     {
       name: 'clear',
-      iconName: 'clear icon',
+      iconName: 'delete icon',
       onclickFunction: this.clearContent.bind(this),
     },
     {
