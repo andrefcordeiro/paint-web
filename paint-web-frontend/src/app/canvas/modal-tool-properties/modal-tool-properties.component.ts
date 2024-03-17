@@ -26,8 +26,7 @@ export class ModalToolPropertiesComponent {
     this.toolData = dialogData;
 
     this.propertiesForm = new FormGroup({
-      size: new FormControl(this.toolData.size),
-      color: new FormControl(this.toolData.color),
+      lineWidth: new FormControl(this.toolData.lineWidth),
     });
   }
 
@@ -35,20 +34,8 @@ export class ModalToolPropertiesComponent {
     this.dialogRef.backdropClick().subscribe(() => {
       this.dialogRef.close({
         name: this.toolData.name,
-        size: this.propertiesForm.value.size,
-        color: this.propertiesForm.value.color
-          ? this.propertiesForm.value.color
-          : this.toolData.color,
+        lineWidth: this.propertiesForm.value.lineWidth,
       });
     });
-  }
-
-  /**
-   * Function to determine if the color input should be displayed.
-   * @returns Boolean
-   */
-  shouldDisplayColorInput() {
-    const toolsNames = ['paintbrush'];
-    return toolsNames.includes(this.toolData.name);
   }
 }

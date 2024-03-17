@@ -10,12 +10,7 @@ export interface CanvasTool {
   /**
    * Line width.
    */
-  size: number;
-
-  /**
-   * Line color.
-   */
-  color: string | CanvasGradient | CanvasPattern;
+  lineWidth: number;
 
   /**
    * Line join.

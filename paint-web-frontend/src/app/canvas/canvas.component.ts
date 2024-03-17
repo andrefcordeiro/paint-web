@@ -2,6 +2,7 @@ import { Component, ElementRef, HostListener, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ModalToolPropertiesComponent } from './modal-tool-properties/modal-tool-properties.component';
 import { CanvasTool } from '../interfaces/canvas-tool.interface';
+import { FormControl, FormGroup } from '@angular/forms';
 
 @Component({
   selector: 'app-canvas',
@@ -18,6 +19,16 @@ export class CanvasComponent {
    * Context.
    */
   context: CanvasRenderingContext2D;
+
+  /**
+   * Background color of the canvas.
+   */
+  backgroundColor = 'white';
+
+  /**
+   * Form with global properties that can be set on the top panel.
+   */
+  public globalPropertiesForm: FormGroup;
 
   /**
    * Flag that determines whether the left mouse button is being pressed.
@@ -53,27 +64,74 @@ export class CanvasComponent {
   /**
    * Selected tool.
    */
-  selectedTool: CanvasTool = { name: 'paintbrush', size: 5, color: '#000000' };
+  selectedTool: CanvasTool;
 
   /**
    * State of each avaliable tool.
    */
-  toolsState: CanvasTool[] = [
-    { name: 'paintbrush', size: 5, color: '#000000' },
-    { name: 'eraser', size: 5, color: 'white' },
-  ];
+  toolsState: CanvasTool[] = [];
 
   /**
-   * Return the nativeElement of the canvas.
+   * Returns the nativeElement of the canvas.
    */
   get canvasElement(): HTMLCanvasElement {
     return this.canvas.nativeElement;
   }
 
+  /**
+   * Returns the 'color' FormControl of the globalPropertiesForm.
+   */
+  get color(): FormControl {
+    return this.globalPropertiesForm.get('color') as FormControl;
+  }
+
   constructor(public dialog: MatDialog) {}
+
+  ngOnInit() {
+    this.initializeToolsState();
+    this.initializeGlobalPropertiesForm();
+  }
 
   ngAfterViewInit() {
     this.createCanvas();
+  }
+
+  /**
+   * Initialize global properties.
+   */
+  private initializeGlobalPropertiesForm() {
+    this.globalPropertiesForm = new FormGroup({
+      color: new FormControl('black'),
+    });
+    this.globalPropertiesForm.valueChanges.subscribe((value) => {
+      this.setGlobalPropertiesContext(value);
+    });
+  }
+
+  /**
+   * Set new context properties values.
+   * @param newValues New context properties values.
+   */
+  private setGlobalPropertiesContext(newValues: any) {
+    if (this.selectedTool.name !== 'eraser')
+      this.context.strokeStyle = newValues?.color;
+  }
+
+  /**
+   * Initialize the state of the canvas tools.
+   */
+  private initializeToolsState() {
+    const paintbrush: CanvasTool = {
+      name: 'paintbrush',
+      lineWidth: 5,
+    };
+    const eraser: CanvasTool = {
+      name: 'eraser',
+      lineWidth: 5,
+    };
+
+    this.selectedTool = paintbrush;
+    this.toolsState.push(paintbrush, eraser);
   }
 
   /**
@@ -87,7 +145,7 @@ export class CanvasComponent {
     this.canvasElement.height = this.canvasElement.offsetHeight;
 
     this.context = this.canvasElement.getContext('2d')!;
-    this.setContextProperties();
+    this.setToolPropertiesContext();
   }
 
   /**
@@ -168,7 +226,7 @@ export class CanvasComponent {
 
     if (selectedToolState) {
       this.selectedTool = selectedToolState;
-      this.setContextProperties();
+      this.setToolPropertiesContext();
     }
   }
 
@@ -183,15 +241,20 @@ export class CanvasComponent {
 
     this.toolsState[indexToolState] = tool;
     this.selectedTool = tool;
-    this.setContextProperties();
+    this.setToolPropertiesContext();
   }
 
   /**
    * Set the properties of the selected tool in the canvas context.
    */
-  setContextProperties() {
-    this.context.strokeStyle = this.selectedTool.color;
-    this.context.lineWidth = this.selectedTool.size;
+  setToolPropertiesContext() {
+    if (this.selectedTool.name === 'eraser') {
+      this.context.strokeStyle = this.backgroundColor;
+    }
+    if (this.selectedTool.name === 'paintbrush') {
+      this.context.strokeStyle = this.color.value;
+    }
+    this.context.lineWidth = this.selectedTool.lineWidth;
     this.context.lineJoin = 'round';
   }
 
