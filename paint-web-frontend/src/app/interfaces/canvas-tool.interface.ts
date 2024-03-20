@@ -5,7 +5,7 @@ export interface CanvasTool {
   /**
    * Name of the tool.
    */
-  name: 'paintbrush' | 'eraser';
+  name: 'paintbrush' | 'eraser' | 'circle';
 
   /**
    * Line width.

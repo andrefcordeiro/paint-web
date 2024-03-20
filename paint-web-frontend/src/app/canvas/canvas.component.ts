@@ -50,6 +50,11 @@ export class CanvasComponent {
       onclickFunction: this.setSelectedTool.bind(this),
     },
     {
+      name: 'circle',
+      iconName: 'panorama_fish_eye icon',
+      onclickFunction: this.setSelectedTool.bind(this),
+    },
+    {
       name: 'clear',
       iconName: 'delete icon',
       onclickFunction: this.clearContent.bind(this),
@@ -70,6 +75,13 @@ export class CanvasComponent {
    * State of each avaliable tool.
    */
   toolsState: CanvasTool[] = [];
+
+  /**
+   * Coordinates to draw circle.
+   */
+  startX: number;
+
+  startY: number;
 
   /**
    * Returns the nativeElement of the canvas.
@@ -129,9 +141,13 @@ export class CanvasComponent {
       name: 'eraser',
       lineWidth: 5,
     };
+    const circle: CanvasTool = {
+      name: 'circle',
+      lineWidth: 5,
+    };
 
     this.selectedTool = paintbrush;
-    this.toolsState.push(paintbrush, eraser);
+    this.toolsState.push(paintbrush, eraser, circle);
   }
 
   /**
@@ -152,10 +168,20 @@ export class CanvasComponent {
    * Mouse events.
    */
   onMouseDown(event: MouseEvent) {
-    if (event.button === 0) {
-      this.mouseDown = true;
-      this.context.beginPath();
-      this.draw(event.clientX, event.clientY);
+    if (event.button !== 0) return;
+
+    this.mouseDown = true;
+
+    switch (this.selectedTool.name) {
+      case 'paintbrush':
+      case 'eraser':
+        this.context.beginPath();
+        this.draw(event.clientX, event.clientY);
+        break;
+      case 'circle':
+        this.startX = event.clientX - this.canvasElement.offsetLeft;
+        this.startY = event.clientY - this.canvasElement.offsetTop;
+        break;
     }
   }
 
@@ -166,7 +192,15 @@ export class CanvasComponent {
 
   onMouseMove(event: MouseEvent) {
     if (this.mouseDown) {
-      this.draw(event.clientX, event.clientY);
+      switch (this.selectedTool.name) {
+        case 'paintbrush':
+        case 'eraser':
+          this.draw(event.clientX, event.clientY);
+          break;
+        case 'circle':
+          this.drawCircle(event.clientX, event.clientY);
+          break;
+      }
     }
   }
 
@@ -191,7 +225,7 @@ export class CanvasComponent {
   }
 
   /**
-   * Function to draw on the canvas.
+   * Draw on the canvas.
    * @param x X coordinate.
    * @param y Y coordinate.
    */
@@ -201,6 +235,40 @@ export class CanvasComponent {
       y - this.canvasElement.offsetTop
     );
     this.context.stroke();
+  }
+
+  /**
+   * Draw circle on the canvas.
+   * @param x X coordinate.
+   * @param y Y coordinate.
+   */
+  private async drawCircle(x: number, y: number) {
+    this.clearContent(); // TODO -> restore content after clearing it to draw the circle
+    this.context.beginPath();
+
+    x = x - this.canvasElement.offsetLeft;
+    y = y - this.canvasElement.offsetTop;
+
+    this.context.moveTo(this.startX, this.startY + (y - this.startY) / 2);
+    this.context.bezierCurveTo(
+      this.startX,
+      this.startY,
+      x,
+      this.startY,
+      x,
+      this.startY + (y - this.startY) / 2
+    );
+    this.context.bezierCurveTo(
+      x,
+      y,
+      this.startX,
+      y,
+      this.startX,
+      this.startY + (y - this.startY) / 2
+    );
+
+    this.context.stroke();
+    this.context.closePath();
   }
 
   /**
@@ -251,7 +319,7 @@ export class CanvasComponent {
     if (this.selectedTool.name === 'eraser') {
       this.context.strokeStyle = this.backgroundColor;
     }
-    if (this.selectedTool.name === 'paintbrush') {
+    if (['paintbrush', 'circle'].includes(this.selectedTool.name)) {
       this.context.strokeStyle = this.color.value;
     }
     this.context.lineWidth = this.selectedTool.lineWidth;
@@ -288,5 +356,14 @@ export class CanvasComponent {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  }
+
+  /**
+   * Function to handle the window resize event.
+   */
+  @HostListener('window:resize', ['$event'])
+  onResize() {
+    this.canvasElement.width = this.canvasElement.offsetWidth;
+    this.canvasElement.height = this.canvasElement.offsetHeight;
   }
 }
