@@ -9,6 +9,7 @@ import { CanvasState } from '../interfaces/canvas-state';
 import { Point } from '../interfaces/shapes/point.interface';
 import { BezierCurve } from '../interfaces/shapes/bezier-curver.interface';
 import { BezierCurveCircle } from '../interfaces/shapes/bezier-curve-circle.interface';
+import { Line } from '../interfaces/shapes/line.interface';
 
 @Component({
   selector: 'app-canvas',
@@ -217,7 +218,8 @@ export class CanvasComponent {
   }
 
   onMouseUp(e: MouseEvent) {
-    this.canvasState.circles.push(this.bezierCurveCircle);
+    if (this.selectedTool.name === 'circle')
+      this.canvasState.circles.push(this.bezierCurveCircle);
 
     this.mouseDown = false;
     this.context.closePath();
