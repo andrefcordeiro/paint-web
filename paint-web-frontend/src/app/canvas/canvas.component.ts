@@ -3,6 +3,12 @@ import { MatDialog } from '@angular/material/dialog';
 import { ModalToolPropertiesComponent } from './modal-tool-properties/modal-tool-properties.component';
 import { CanvasTool } from '../interfaces/canvas-tool.interface';
 import { FormControl, FormGroup } from '@angular/forms';
+import { CanvasMemento } from '../interfaces/canvas-memento';
+import { CaretakerService } from '../state-management/caretaker.service';
+import { CanvasState } from '../interfaces/canvas-state';
+import { Point } from '../interfaces/shapes/point.interface';
+import { BezierCurve } from '../interfaces/shapes/bezier-curver.interface';
+import { BezierCurveCircle } from '../interfaces/shapes/bezier-curve-circle.interface';
 
 @Component({
   selector: 'app-canvas',
@@ -72,16 +78,19 @@ export class CanvasComponent {
   selectedTool: CanvasTool;
 
   /**
-   * State of each avaliable tool.
+   * Coordinates to draw circle with bezier curve.
    */
-  toolsState: CanvasTool[] = [];
+  start: Point;
 
   /**
-   * Coordinates to draw circle.
+   * State of the canvas.
    */
-  startX: number;
+  canvasState: CanvasState;
 
-  startY: number;
+  /**
+   * Latest bezierCurveCircle drawn
+   */
+  bezierCurveCircle: BezierCurveCircle;
 
   /**
    * Returns the nativeElement of the canvas.
@@ -97,15 +106,43 @@ export class CanvasComponent {
     return this.globalPropertiesForm.get('color') as FormControl;
   }
 
-  constructor(public dialog: MatDialog) {}
+  /**
+   *
+   * @param dialog Component to render modals.
+   * @param caretakerService Service for state management.
+   */
+  constructor(
+    public dialog: MatDialog,
+    private caretakerService: CaretakerService
+  ) {}
 
   ngOnInit() {
-    this.initializeToolsState();
-    this.initializeGlobalPropertiesForm();
+    this.initializeCanvasToolsState();
   }
 
   ngAfterViewInit() {
     this.createCanvas();
+  }
+
+  /**
+   * Initialize the state of the canvas tools.
+   */
+  private initializeCanvasToolsState() {
+    const paintbrush: CanvasTool = { name: 'paintbrush', lineWidth: 5 };
+    const eraser: CanvasTool = { name: 'eraser', lineWidth: 5 };
+    const circle: CanvasTool = { name: 'circle', lineWidth: 5 };
+
+    this.selectedTool = paintbrush;
+    const toolsState = [paintbrush, eraser, circle];
+
+    this.canvasState = {
+      latestOperation: 'none',
+      color: 'black',
+      toolsState: toolsState,
+      circles: [],
+    };
+
+    this.initializeGlobalPropertiesForm();
   }
 
   /**
@@ -115,39 +152,18 @@ export class CanvasComponent {
     this.globalPropertiesForm = new FormGroup({
       color: new FormControl('black'),
     });
-    this.globalPropertiesForm.valueChanges.subscribe((value) => {
-      this.setGlobalPropertiesContext(value);
-    });
   }
 
   /**
-   * Set new context properties values.
-   * @param newValues New context properties values.
+   * Method called whenever the color input is changed.
    */
-  private setGlobalPropertiesContext(newValues: any) {
-    if (this.selectedTool.name !== 'eraser')
-      this.context.strokeStyle = newValues?.color;
-  }
+  onColorChange() {
+    if (this.selectedTool.name !== 'eraser') {
+      this.saveState('globalPropertiesChanged');
 
-  /**
-   * Initialize the state of the canvas tools.
-   */
-  private initializeToolsState() {
-    const paintbrush: CanvasTool = {
-      name: 'paintbrush',
-      lineWidth: 5,
-    };
-    const eraser: CanvasTool = {
-      name: 'eraser',
-      lineWidth: 5,
-    };
-    const circle: CanvasTool = {
-      name: 'circle',
-      lineWidth: 5,
-    };
-
-    this.selectedTool = paintbrush;
-    this.toolsState.push(paintbrush, eraser, circle);
+      this.canvasState.color = this.color.value;
+      this.context.strokeStyle = this.color.value;
+    }
   }
 
   /**
@@ -165,40 +181,60 @@ export class CanvasComponent {
   }
 
   /**
+   * Return the mouse point minus the canvas offset.
+   * @param x
+   * @param y
+   * @returns Point
+   */
+  private getMouseCoordMinusOffset(x: number, y: number): Point {
+    return {
+      x: x - this.canvasElement.offsetLeft,
+      y: y - this.canvasElement.offsetTop,
+    };
+  }
+
+  /**
    * Mouse events.
    */
-  onMouseDown(event: MouseEvent) {
-    if (event.button !== 0) return;
+  onMouseDown(e: MouseEvent) {
+    if (e.button !== 0) return;
 
     this.mouseDown = true;
+    const p = this.getMouseCoordMinusOffset(e.clientX, e.clientY);
 
     switch (this.selectedTool.name) {
       case 'paintbrush':
       case 'eraser':
         this.context.beginPath();
-        this.draw(event.clientX, event.clientY);
+        this.draw(p.x, p.y);
         break;
+
       case 'circle':
-        this.startX = event.clientX - this.canvasElement.offsetLeft;
-        this.startY = event.clientY - this.canvasElement.offsetTop;
+        this.saveState('drawing');
+        this.start = p;
         break;
     }
   }
 
-  onMouseUp(event: MouseEvent) {
+  onMouseUp(e: MouseEvent) {
+    this.canvasState.circles.push(this.bezierCurveCircle);
+
     this.mouseDown = false;
     this.context.closePath();
   }
 
-  onMouseMove(event: MouseEvent) {
+  onMouseMove(e: MouseEvent) {
     if (this.mouseDown) {
+      const p = this.getMouseCoordMinusOffset(e.clientX, e.clientY);
+
       switch (this.selectedTool.name) {
         case 'paintbrush':
         case 'eraser':
-          this.draw(event.clientX, event.clientY);
+          this.draw(p.x, p.y);
           break;
+
         case 'circle':
-          this.drawCircle(event.clientX, event.clientY);
+          this.drawCircle(p.x, p.y);
           break;
       }
     }
@@ -210,18 +246,23 @@ export class CanvasComponent {
 
   /**
    * Function to handle keyboard event and change selected tool.
-   * @param event Keyboard event.
+   * @param e Keyboard event.
    */
   @HostListener('document:keyup', ['$event'])
-  private handleKeyboardEvent(event: KeyboardEvent) {
-    const key = event.key;
+  private handleKeyboardEvent(e: KeyboardEvent) {
+    const key = e.key;
+    const controlKeys = ['e', 'b'];
 
-    const keysTools: { [key: string]: string } = {
-      e: 'eraser',
-      b: 'paintbrush',
-    };
+    if (e.ctrlKey && key === 'z') {
+      this.restoreState();
+    } else if (controlKeys.includes(key)) {
+      const keysTools: { [key: string]: string } = {
+        e: 'eraser',
+        b: 'paintbrush',
+      };
 
-    this.setSelectedTool(keysTools[key]);
+      this.setSelectedTool(keysTools[key]);
+    }
   }
 
   /**
@@ -230,10 +271,7 @@ export class CanvasComponent {
    * @param y Y coordinate.
    */
   private draw(x: number, y: number) {
-    this.context.lineTo(
-      x - this.canvasElement.offsetLeft,
-      y - this.canvasElement.offsetTop
-    );
+    this.context.lineTo(x, y);
     this.context.stroke();
   }
 
@@ -243,32 +281,77 @@ export class CanvasComponent {
    * @param y Y coordinate.
    */
   private async drawCircle(x: number, y: number) {
-    this.clearContent(); // TODO -> restore content after clearing it to draw the circle
+    // restoring canvas state everytime a new circle is drawn
+    this.restoreState();
+    this.saveState('drawing');
+
     this.context.beginPath();
 
-    x = x - this.canvasElement.offsetLeft;
-    y = y - this.canvasElement.offsetTop;
+    const start: Point = {
+      x: this.start.x,
+      y: this.start.y + (y - this.start.y) / 2,
+    };
+    this.context.moveTo(start.x, start.y);
 
-    this.context.moveTo(this.startX, this.startY + (y - this.startY) / 2);
-    this.context.bezierCurveTo(
-      this.startX,
-      this.startY,
-      x,
-      this.startY,
-      x,
-      this.startY + (y - this.startY) / 2
-    );
-    this.context.bezierCurveTo(
-      x,
-      y,
-      this.startX,
-      y,
-      this.startX,
-      this.startY + (y - this.startY) / 2
-    );
+    const topBezierCurve: BezierCurve = {
+      cp1: { x: this.start.x, y: this.start.y },
+      cp2: { x, y: this.start.y },
+      end: { x, y: this.start.y + (y - this.start.y) / 2 },
+    };
+
+    this.drawBezierCurveTo(topBezierCurve);
+
+    const bottomBezierCurve: BezierCurve = {
+      cp1: { x, y },
+      cp2: { x: this.start.x, y },
+      end: { x: this.start.x, y: this.start.y + (y - this.start.y) / 2 },
+    };
+
+    this.drawBezierCurveTo(bottomBezierCurve);
 
     this.context.stroke();
     this.context.closePath();
+
+    this.bezierCurveCircle = {
+      start,
+      topBezierCurve,
+      bottomBezierCurve,
+      color: this.color.value,
+    };
+  }
+
+  /**
+   * Draw a Bezier Curvel.
+   * @param bezierCurve Curve to be drawn.
+   */
+  private drawBezierCurveTo(bezierCurve: BezierCurve) {
+    this.context.bezierCurveTo(
+      bezierCurve.cp1.x,
+      bezierCurve.cp1.y,
+      bezierCurve.cp2.x,
+      bezierCurve.cp2.y,
+      bezierCurve.end.x,
+      bezierCurve.end.y
+    );
+  }
+
+  /**
+   * Redraw circle after state is restored
+   * @param circle
+   */
+  private redrawCircleOnStageRestore(circle: BezierCurveCircle) {
+    this.context.strokeStyle = circle.color; // pegando a cor do círculo
+    this.context.beginPath();
+
+    this.context.moveTo(circle.start.x, circle.start.y);
+
+    this.drawBezierCurveTo(circle.topBezierCurve);
+    this.drawBezierCurveTo(circle.bottomBezierCurve);
+
+    this.context.stroke();
+    this.context.closePath();
+
+    this.context.strokeStyle = this.color.value;
   }
 
   /**
@@ -288,13 +371,19 @@ export class CanvasComponent {
    * @param tool Selected tool.
    */
   private setSelectedTool(name: string) {
-    const selectedToolState: CanvasTool | undefined = this.toolsState.find(
-      (tState) => tState.name === name
-    );
+    const selectedToolState: CanvasTool | undefined =
+      this.canvasState.toolsState.find((tState) => tState.name === name);
 
     if (selectedToolState) {
       this.selectedTool = selectedToolState;
       this.setToolPropertiesContext();
+    }
+
+    // enabling/disabling color input
+    if (['paintbrush', 'circle'].includes(name)) {
+      this.color.enable();
+    } else {
+      this.color.disable();
     }
   }
 
@@ -303,11 +392,11 @@ export class CanvasComponent {
    * @param tool Selected tool.
    */
   private updateSelectedToolState(tool: CanvasTool) {
-    const indexToolState = this.toolsState.findIndex(
+    const indexToolState = this.canvasState.toolsState.findIndex(
       (tState) => tState.name === tool.name
     );
 
-    this.toolsState[indexToolState] = tool;
+    this.canvasState.toolsState[indexToolState] = tool;
     this.selectedTool = tool;
     this.setToolPropertiesContext();
   }
@@ -315,7 +404,7 @@ export class CanvasComponent {
   /**
    * Set the properties of the selected tool in the canvas context.
    */
-  setToolPropertiesContext() {
+  private setToolPropertiesContext() {
     if (this.selectedTool.name === 'eraser') {
       this.context.strokeStyle = this.backgroundColor;
     }
@@ -328,10 +417,10 @@ export class CanvasComponent {
 
   /**
    * Function called when the user right click on the canvas.
-   * @param event Mouse event.
+   * @param e Mouse event.
    */
-  onRightClick(event: MouseEvent) {
-    event.preventDefault();
+  onRightClick(e: MouseEvent) {
+    e.preventDefault();
     const dialogRef = this.dialog.open(ModalToolPropertiesComponent, {
       data: this.selectedTool,
       width: '300px',
@@ -340,6 +429,7 @@ export class CanvasComponent {
 
     dialogRef.afterClosed().subscribe((data: CanvasTool) => {
       if (data) {
+        this.saveState('toolPropertiesChanged');
         this.updateSelectedToolState(data);
       }
     });
@@ -365,5 +455,44 @@ export class CanvasComponent {
   onResize() {
     this.canvasElement.width = this.canvasElement.offsetWidth;
     this.canvasElement.height = this.canvasElement.offsetHeight;
+  }
+
+  /**
+   * State management.
+   */
+
+  /**
+   * Saves the current state inside a memento.
+   */
+  private saveState(latestOperation: string) {
+    this.canvasState.latestOperation = latestOperation;
+    const memento = new CanvasMemento(
+      JSON.parse(JSON.stringify(this.canvasState))
+    );
+    this.caretakerService.pushMemento(memento);
+  }
+
+  /**
+   * Restores the Originator's state from a memento object.
+   */
+  private restoreState() {
+    const memento = this.caretakerService.popMemento() as CanvasMemento;
+    if (!memento) return;
+
+    this.canvasState = memento.getState();
+
+    switch (this.canvasState.latestOperation) {
+      case 'drawing':
+        this.clearContent();
+        // redrawing content
+        this.canvasState.circles.forEach((circle: BezierCurveCircle) => {
+          this.redrawCircleOnStageRestore(circle);
+        });
+        break;
+
+      case 'globalPropertiesChanged':
+        this.color.setValue(this.canvasState.color);
+        break;
+    }
   }
 }

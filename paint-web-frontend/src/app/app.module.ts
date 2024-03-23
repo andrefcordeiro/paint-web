@@ -13,6 +13,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCardModule } from '@angular/material/card';
 import { ReactiveFormsModule } from '@angular/forms';
+import { CaretakerService } from './state-management/caretaker.service';
 
 @NgModule({
   declarations: [AppComponent, CanvasComponent, ModalToolPropertiesComponent],
@@ -28,7 +29,7 @@ import { ReactiveFormsModule } from '@angular/forms';
     MatCardModule,
     ReactiveFormsModule,
   ],
-  providers: [],
+  providers: [CaretakerService],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
