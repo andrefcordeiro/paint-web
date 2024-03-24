@@ -29,7 +29,9 @@
           placeholder="color"
           value="#000"
           formControlName="color"
-          (click)="onColorChange()"
+          (change)="onColorChange()"
+          (focus)="this.canvasDisabled = true"
+          (blur)="this.canvasDisabled = false"
         />
       </div>
     </form>

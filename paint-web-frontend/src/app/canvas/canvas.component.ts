@@ -94,6 +94,16 @@ export class CanvasComponent {
   bezierCurveCircle: BezierCurveCircle;
 
   /**
+   * Current line being drawn on the canvas.
+   */
+  line: Line = { points: [], color: '' };
+
+  /**
+   * Flag to determine if changes on canvas are allowed.
+   */
+  canvasDisabled = false;
+
+  /**
    * Returns the nativeElement of the canvas.
    */
   get canvasElement(): HTMLCanvasElement {
@@ -140,6 +150,7 @@ export class CanvasComponent {
       latestOperation: 'none',
       color: 'black',
       toolsState: toolsState,
+      lines: [],
       circles: [],
     };
 
@@ -198,7 +209,7 @@ export class CanvasComponent {
    * Mouse events.
    */
   onMouseDown(e: MouseEvent) {
-    if (e.button !== 0) return;
+    if (e.button !== 0 || this.canvasDisabled) return;
 
     this.mouseDown = true;
     const p = this.getMouseCoordMinusOffset(e.clientX, e.clientY);
@@ -206,6 +217,7 @@ export class CanvasComponent {
     switch (this.selectedTool.name) {
       case 'paintbrush':
       case 'eraser':
+        this.saveState('drawing');
         this.context.beginPath();
         this.draw(p.x, p.y);
         break;
@@ -218,8 +230,18 @@ export class CanvasComponent {
   }
 
   onMouseUp(e: MouseEvent) {
-    if (this.selectedTool.name === 'circle')
-      this.canvasState.circles.push(this.bezierCurveCircle);
+    switch (this.selectedTool.name) {
+      case 'paintbrush':
+      case 'eraser':
+        this.canvasState.lines.push(this.line);
+        this.line = { points: [], color: '' };
+        break;
+
+      case 'circle':
+        this.canvasState.circles.push(this.bezierCurveCircle);
+        this.bezierCurveCircle = {} as BezierCurveCircle;
+        break;
+    }
 
     this.mouseDown = false;
     this.context.closePath();
@@ -275,6 +297,24 @@ export class CanvasComponent {
   private draw(x: number, y: number) {
     this.context.lineTo(x, y);
     this.context.stroke();
+    this.line.points.push({ x, y });
+  }
+
+  /**
+   * Redraw line after the state is restored.
+   * @param line
+   */
+  private redrawLineOnStageRestore(line: Line) {
+    this.context.strokeStyle = line.color;
+    this.context.beginPath();
+
+    line.points.forEach((p) => {
+      this.context.lineTo(p.x, p.y);
+    });
+
+    this.context.stroke();
+    this.context.closePath();
+    this.context.strokeStyle = this.color.value;
   }
 
   /**
@@ -338,11 +378,11 @@ export class CanvasComponent {
   }
 
   /**
-   * Redraw circle after state is restored
+   * Redraw circle after the state is restored.
    * @param circle
    */
   private redrawCircleOnStageRestore(circle: BezierCurveCircle) {
-    this.context.strokeStyle = circle.color; // pegando a cor do círculo
+    this.context.strokeStyle = circle.color;
     this.context.beginPath();
 
     this.context.moveTo(circle.start.x, circle.start.y);
@@ -490,10 +530,16 @@ export class CanvasComponent {
         this.canvasState.circles.forEach((circle: BezierCurveCircle) => {
           this.redrawCircleOnStageRestore(circle);
         });
+
+        this.canvasState.lines.forEach((line: Line) => {
+          this.redrawLineOnStageRestore(line);
+        });
+
         break;
 
       case 'globalPropertiesChanged':
         this.color.setValue(this.canvasState.color);
+        this.context.strokeStyle = this.canvasState.color;
         break;
     }
   }
