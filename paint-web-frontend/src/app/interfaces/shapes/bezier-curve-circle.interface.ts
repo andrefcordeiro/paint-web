@@ -9,4 +9,6 @@ export interface BezierCurveCircle {
   bottomBezierCurve: BezierCurve;
 
   color: string;
+
+  lineWidth: number;
 }

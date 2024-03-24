@@ -96,7 +96,7 @@ export class CanvasComponent {
   /**
    * Current line being drawn on the canvas.
    */
-  line: Line = { points: [], color: '' };
+  line: Line;
 
   /**
    * Flag to determine if changes on canvas are allowed.
@@ -217,7 +217,11 @@ export class CanvasComponent {
     switch (this.selectedTool.name) {
       case 'paintbrush':
       case 'eraser':
-        this.line = { points: [], color: this.color.value };
+        this.line = {
+          points: [],
+          color: this.color.value,
+          lineWidth: this.context.lineWidth,
+        };
 
         this.saveState('drawing');
         this.context.beginPath();
@@ -306,6 +310,7 @@ export class CanvasComponent {
    * @param line
    */
   private redrawLineOnStageRestore(line: Line) {
+    this.context.lineWidth = line.lineWidth;
     this.context.strokeStyle = line.color;
     this.context.beginPath();
 
@@ -315,6 +320,7 @@ export class CanvasComponent {
 
     this.context.stroke();
     this.context.closePath();
+    this.context.lineWidth = this.selectedTool.lineWidth;
     this.context.strokeStyle = this.color.value;
   }
 
@@ -360,6 +366,7 @@ export class CanvasComponent {
       topBezierCurve,
       bottomBezierCurve,
       color: this.color.value,
+      lineWidth: this.context.lineWidth,
     };
   }
 
@@ -383,6 +390,7 @@ export class CanvasComponent {
    * @param circle
    */
   private redrawCircleOnStageRestore(circle: BezierCurveCircle) {
+    this.context.lineWidth = circle.lineWidth;
     this.context.strokeStyle = circle.color;
     this.context.beginPath();
 
@@ -394,6 +402,7 @@ export class CanvasComponent {
     this.context.stroke();
     this.context.closePath();
 
+    this.context.lineWidth = this.selectedTool.lineWidth;
     this.context.strokeStyle = this.color.value;
   }
 

@@ -4,4 +4,6 @@ export interface Line {
   points: Point[];
 
   color: string;
+
+  lineWidth: number;
 }
