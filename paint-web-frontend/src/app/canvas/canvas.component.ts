@@ -217,6 +217,8 @@ export class CanvasComponent {
     switch (this.selectedTool.name) {
       case 'paintbrush':
       case 'eraser':
+        this.line = { points: [], color: this.color.value };
+
         this.saveState('drawing');
         this.context.beginPath();
         this.draw(p.x, p.y);
@@ -234,7 +236,6 @@ export class CanvasComponent {
       case 'paintbrush':
       case 'eraser':
         this.canvasState.lines.push(this.line);
-        this.line = { points: [], color: '' };
         break;
 
       case 'circle':
