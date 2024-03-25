@@ -1,6 +1,7 @@
 import { CanvasTool } from './canvas-tool.interface';
 import { BezierCurveCircle } from './shapes/bezier-curve-circle.interface';
 import { Line } from './shapes/line.interface';
+import { Rectangle } from './shapes/rectangle.interface';
 
 export interface CanvasState {
   latestOperation: string;
@@ -13,4 +14,6 @@ export interface CanvasState {
   lines: Line[];
 
   circles: BezierCurveCircle[];
+
+  rectangles: Rectangle[];
 }

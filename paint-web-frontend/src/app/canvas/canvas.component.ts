@@ -10,6 +10,7 @@ import { Point } from '../interfaces/shapes/point.interface';
 import { BezierCurve } from '../interfaces/shapes/bezier-curver.interface';
 import { BezierCurveCircle } from '../interfaces/shapes/bezier-curve-circle.interface';
 import { Line } from '../interfaces/shapes/line.interface';
+import { Rectangle } from '../interfaces/shapes/rectangle.interface';
 
 @Component({
   selector: 'app-canvas',
@@ -152,6 +153,7 @@ export class CanvasComponent {
       toolsState: toolsState,
       lines: [],
       circles: [],
+      rectangles: [],
     };
 
     this.initializeGlobalPropertiesForm();
@@ -408,15 +410,53 @@ export class CanvasComponent {
   }
 
   /**
-   * Clear all page content.
+   * Redraw a rectangle after the state is restored.
+   * @param rect
    */
-  clearContent() {
+  private redrawRectangleOnStageRestore(rect: Rectangle) {
+    this.context.lineWidth = rect.lineWidth;
+    this.context.strokeStyle = rect.color;
+
+    this.context.beginPath();
+
+    this.context.rect(rect.x1, rect.y1, rect.x2, rect.y2);
+
+    this.context.stroke();
+    this.context.closePath();
+
+    this.context.lineWidth = this.selectedTool.lineWidth;
+    this.context.strokeStyle = this.color.value;
+  }
+
+  /**
+   * Clear all page content before redrawing content on state restore.
+   */
+  clearContentOnStageRestore() {
     this.context.clearRect(
       0,
       0,
       this.canvasElement.width,
       this.canvasElement.height
     );
+  }
+
+  /**
+   * Clear all page content.
+   */
+  clearContent() {
+    this.saveState('drawing');
+
+    const rect: Rectangle = {
+      x1: 0,
+      y1: 0,
+      x2: this.canvasElement.width,
+      y2: this.canvasElement.height,
+      color: 'white',
+      lineWidth: 0,
+    };
+    this.context.clearRect(rect.x1, rect.y1, rect.x2, rect.y2);
+
+    this.canvasState.rectangles.push(rect);
   }
 
   /**
@@ -536,7 +576,7 @@ export class CanvasComponent {
 
     switch (this.canvasState.latestOperation) {
       case 'drawing':
-        this.clearContent();
+        this.clearContentOnStageRestore();
         // redrawing content
         this.canvasState.circles.forEach((circle: BezierCurveCircle) => {
           this.redrawCircleOnStageRestore(circle);
@@ -544,6 +584,10 @@ export class CanvasComponent {
 
         this.canvasState.lines.forEach((line: Line) => {
           this.redrawLineOnStageRestore(line);
+        });
+
+        this.canvasState.rectangles.forEach((rect: Rectangle) => {
+          this.redrawRectangleOnStageRestore(rect);
         });
 
         break;
