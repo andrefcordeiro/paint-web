@@ -91,7 +91,7 @@ export class CanvasComponent {
   /**
    * Latest bezierCurveCircle drawn
    */
-  bezierCurveCircle: BezierCurveCircle;
+  bezierCurveCircle: BezierCurveCircle | null;
 
   /**
    * Current line being drawn on the canvas.
@@ -243,8 +243,9 @@ export class CanvasComponent {
         break;
 
       case 'circle':
-        this.canvasState.circles.push(this.bezierCurveCircle);
-        this.bezierCurveCircle = {} as BezierCurveCircle;
+        if (this.bezierCurveCircle)
+          this.canvasState.circles.push(this.bezierCurveCircle);
+        this.bezierCurveCircle = null;
         break;
     }
 
