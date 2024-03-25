@@ -552,6 +552,13 @@ export class CanvasComponent {
         this.color.setValue(this.canvasState.color);
         this.context.strokeStyle = this.canvasState.color;
         break;
+
+      case 'toolPropertiesChanged':
+        const toolState = this.canvasState.toolsState.find(
+          (ts) => ts.name === this.selectedTool.name
+        );
+        this.updateSelectedToolState(toolState!);
+        break;
     }
   }
 }
