@@ -1,23 +1,10 @@
 <div id="container">
   <form [formGroup]="propertiesForm">
     <div class="input">
-      <mat-label> Size </mat-label>
+      <mat-label> Line width </mat-label>
       <mat-slider min="1" max="100">
-        <input matSliderThumb formControlName="size" />
+        <input matSliderThumb formControlName="lineWidth" />
       </mat-slider>
-    </div>
-
-    <div class="input" *ngIf="shouldDisplayColorInput()">
-      <mat-label> Color </mat-label>
-      <mat-form-field class="example-full-width">
-        <input
-          matInput
-          type="color"
-          placeholder="color"
-          value="#000"
-          formControlName="color"
-        />
-      </mat-form-field>
     </div>
   </form>
 </div>

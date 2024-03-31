@@ -5,17 +5,12 @@ export interface CanvasTool {
   /**
    * Name of the tool.
    */
-  name: 'paintbrush' | 'eraser';
+  name: 'paintbrush' | 'eraser' | 'circle';
 
   /**
    * Line width.
    */
-  size: number;
-
-  /**
-   * Line color.
-   */
-  color: string | CanvasGradient | CanvasPattern;
+  lineWidth: number;
 
   /**
    * Line join.

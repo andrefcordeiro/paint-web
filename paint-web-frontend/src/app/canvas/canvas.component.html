@@ -1,15 +1,44 @@
-<div id="toolbar">
-  <ng-container *ngFor="let t of tools">
-    <button
-      mat-button
-      (click)="t.onclickFunction(t.name)"
-      [ngClass]="{ 'tool-selected': tool.name === t.name }"
-    >
-      <mat-icon fontIcon="{{ t.iconName }}"></mat-icon>
-    </button>
-  </ng-container>
+<div id="top-panel">
+  <div id="toolbar">
+    <!-- Tools -->
+    <ng-container *ngFor="let t of tools">
+      <button
+        mat-button
+        (click)="t.onclickFunction(t.name)"
+        [ngClass]="{ 'tool-selected': selectedTool.name === t.name }"
+      >
+        <mat-icon fontIcon="{{ t.iconName }}"></mat-icon>
+      </button>
+    </ng-container>
+  </div>
+
+  <!--  Global properties -->
+  <div id="global-properties">
+    <form [formGroup]="globalPropertiesForm">
+      <div class="property-button">
+        <label for="color-picker-input">
+          <mat-icon
+            [ngStyle]="{ color: color.value }"
+            fontIcon="palette icon"
+          ></mat-icon>
+        </label>
+
+        <input
+          id="color-picker-input"
+          type="color"
+          placeholder="color"
+          value="#000"
+          formControlName="color"
+          (change)="onColorChange()"
+          (focus)="this.canvasDisabled = true"
+          (blur)="this.canvasDisabled = false"
+        />
+      </div>
+    </form>
+  </div>
 </div>
 
+<!-- Canvas -->
 <div id="container-canvas">
   <canvas
     id="canvas"
