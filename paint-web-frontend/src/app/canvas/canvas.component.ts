@@ -183,6 +183,7 @@ export class CanvasComponent {
 
       this.canvasState.color = this.color.value;
       this.context.strokeStyle = this.color.value;
+      this.context.fillStyle = this.color.value;
     }
   }
 
@@ -372,6 +373,8 @@ export class CanvasComponent {
 
     this.drawBezierCurveTo(bottomBezierCurve);
 
+    this.context.fill();
+
     this.context.stroke();
     this.context.closePath();
 
@@ -406,6 +409,7 @@ export class CanvasComponent {
   private redrawCircleOnStageRestore(circle: BezierCurveCircle) {
     this.context.lineWidth = circle.lineWidth;
     this.context.strokeStyle = circle.color;
+    this.context.fillStyle = circle.color;
     this.context.beginPath();
 
     this.context.moveTo(circle.start.x, circle.start.y);
@@ -413,11 +417,13 @@ export class CanvasComponent {
     this.drawBezierCurveTo(circle.topBezierCurve);
     this.drawBezierCurveTo(circle.bottomBezierCurve);
 
+    this.context.fill();
     this.context.stroke();
     this.context.closePath();
 
     this.context.lineWidth = this.selectedTool.lineWidth;
     this.context.strokeStyle = this.color.value;
+    this.context.fillStyle = this.color.value;
   }
 
   /**
