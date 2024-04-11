@@ -14,9 +14,10 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCardModule } from '@angular/material/card';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CaretakerService } from './state-management/caretaker.service';
+import { ToolbarComponent } from './canvas/toolbar/toolbar.component';
 
 @NgModule({
-  declarations: [AppComponent, CanvasComponent, ModalToolPropertiesComponent],
+  declarations: [AppComponent, CanvasComponent, ModalToolPropertiesComponent, ToolbarComponent],
   imports: [
     BrowserModule,
     BrowserAnimationsModule,

@@ -2,7 +2,6 @@ import { Component, ElementRef, HostListener, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ModalToolPropertiesComponent } from './modal-tool-properties/modal-tool-properties.component';
 import { CanvasTool } from '../interfaces/canvas-tool.interface';
-import { FormControl, FormGroup } from '@angular/forms';
 import { CanvasMemento } from '../interfaces/canvas-memento';
 import { CaretakerService } from '../state-management/caretaker.service';
 import { CanvasState } from '../interfaces/canvas-state';
@@ -33,11 +32,6 @@ export class CanvasComponent {
    * Background color of the canvas.
    */
   backgroundColor = 'white';
-
-  /**
-   * Form with global properties that can be set on the top panel.
-   */
-  public globalPropertiesForm: FormGroup;
 
   /**
    * Flag that determines whether the left mouse button is being pressed.
@@ -76,11 +70,6 @@ export class CanvasComponent {
   ];
 
   /**
-   * Selected tool.
-   */
-  selectedTool: CanvasTool;
-
-  /**
    * Coordinates to draw circle with bezier curve.
    */
   start: Point;
@@ -106,22 +95,10 @@ export class CanvasComponent {
   line: Line;
 
   /**
-   * Flag to determine if changes on canvas are allowed.
-   */
-  canvasDisabled = false;
-
-  /**
    * Returns the nativeElement of the canvas.
    */
   get canvasElement(): HTMLCanvasElement {
     return this.canvas.nativeElement;
-  }
-
-  /**
-   * Returns the 'color' FormControl of the globalPropertiesForm.
-   */
-  get color(): FormControl {
-    return this.globalPropertiesForm.get('color') as FormControl;
   }
 
   /**
@@ -150,7 +127,6 @@ export class CanvasComponent {
     const eraser: CanvasTool = { name: 'eraser', lineWidth: 5 };
     const circle: CanvasTool = { name: 'circle', lineWidth: 5 };
 
-    this.selectedTool = paintbrush;
     const toolsState = [paintbrush, eraser, circle];
 
     this.canvasState = {
@@ -160,30 +136,21 @@ export class CanvasComponent {
       lines: [],
       circles: [],
       rectangles: [],
+      disabled: false,
+      selectedTool: paintbrush,
     };
-
-    this.initializeGlobalPropertiesForm();
-  }
-
-  /**
-   * Initialize global properties.
-   */
-  private initializeGlobalPropertiesForm() {
-    this.globalPropertiesForm = new FormGroup({
-      color: new FormControl('black'),
-    });
   }
 
   /**
    * Method called whenever the color input is changed.
    */
-  onColorChange() {
-    if (this.selectedTool.name !== 'eraser') {
+  onColorChange(color: string) {
+    if (this.canvasState.selectedTool.name !== 'eraser') {
       this.saveState('globalPropertiesChanged');
 
-      this.canvasState.color = this.color.value;
-      this.context.strokeStyle = this.color.value;
-      this.context.fillStyle = this.color.value;
+      this.canvasState.color = color;
+      this.context.strokeStyle = color;
+      this.context.fillStyle = color;
     }
   }
 
@@ -218,12 +185,12 @@ export class CanvasComponent {
    * Mouse events.
    */
   onMouseDown(e: MouseEvent) {
-    if (e.button !== 0 || this.canvasDisabled) return;
+    if (e.button !== 0 || this.canvasState.disabled) return;
 
     this.mouseDown = true;
     const p = this.getMouseCoordMinusOffset(e.clientX, e.clientY);
 
-    switch (this.selectedTool.name) {
+    switch (this.canvasState.selectedTool.name) {
       case 'paintbrush':
       case 'eraser':
         this.line = {
@@ -244,7 +211,7 @@ export class CanvasComponent {
   }
 
   onMouseUp(e: MouseEvent) {
-    switch (this.selectedTool.name) {
+    switch (this.canvasState.selectedTool.name) {
       case 'paintbrush':
       case 'eraser':
         if (this.line) this.canvasState.lines.push(this.line);
@@ -265,7 +232,7 @@ export class CanvasComponent {
     if (this.mouseDown) {
       const p = this.getMouseCoordMinusOffset(e.clientX, e.clientY);
 
-      switch (this.selectedTool.name) {
+      switch (this.canvasState.selectedTool.name) {
         case 'paintbrush':
         case 'eraser':
           this.draw(p.x, p.y);
@@ -335,7 +302,7 @@ export class CanvasComponent {
 
     this.context.stroke();
     this.context.closePath();
-    this.context.lineWidth = this.selectedTool.lineWidth;
+    this.context.lineWidth = this.canvasState.selectedTool.lineWidth;
     this.context.strokeStyle = previousColor;
   }
 
@@ -382,7 +349,7 @@ export class CanvasComponent {
       start,
       topBezierCurve,
       bottomBezierCurve,
-      color: this.color.value,
+      color: this.canvasState.color,
       lineWidth: this.context.lineWidth,
     };
   }
@@ -421,9 +388,9 @@ export class CanvasComponent {
     this.context.stroke();
     this.context.closePath();
 
-    this.context.lineWidth = this.selectedTool.lineWidth;
-    this.context.strokeStyle = this.color.value;
-    this.context.fillStyle = this.color.value;
+    this.context.lineWidth = this.canvasState.selectedTool.lineWidth;
+    this.context.strokeStyle = this.canvasState.color;
+    this.context.fillStyle = this.canvasState.color;
   }
 
   /**
@@ -441,8 +408,8 @@ export class CanvasComponent {
     this.context.stroke();
     this.context.closePath();
 
-    this.context.lineWidth = this.selectedTool.lineWidth;
-    this.context.strokeStyle = this.color.value;
+    this.context.lineWidth = this.canvasState.selectedTool.lineWidth;
+    this.context.strokeStyle = this.canvasState.color;
   }
 
   /**
@@ -490,15 +457,8 @@ export class CanvasComponent {
       this.canvasState.toolsState.find((tState) => tState.name === name);
 
     if (selectedToolState) {
-      this.selectedTool = selectedToolState;
+      this.canvasState.selectedTool = selectedToolState;
       this.setToolPropertiesContext();
-    }
-
-    // enabling/disabling color input
-    if (['paintbrush', 'circle'].includes(name)) {
-      this.color.enable();
-    } else {
-      this.color.disable();
     }
   }
 
@@ -512,7 +472,7 @@ export class CanvasComponent {
     );
 
     this.canvasState.toolsState[indexToolState] = tool;
-    this.selectedTool = tool;
+    this.canvasState.selectedTool = tool;
     this.setToolPropertiesContext();
   }
 
@@ -520,13 +480,13 @@ export class CanvasComponent {
    * Set the properties of the selected tool in the canvas context.
    */
   private setToolPropertiesContext() {
-    if (this.selectedTool.name === 'eraser') {
+    if (this.canvasState.selectedTool.name === 'eraser') {
       this.context.strokeStyle = this.backgroundColor;
     }
-    if (['paintbrush', 'circle'].includes(this.selectedTool.name)) {
-      this.context.strokeStyle = this.color.value;
+    if (['paintbrush', 'circle'].includes(this.canvasState.selectedTool.name)) {
+      this.context.strokeStyle = this.canvasState.color;
     }
-    this.context.lineWidth = this.selectedTool.lineWidth;
+    this.context.lineWidth = this.canvasState.selectedTool.lineWidth;
     this.context.lineJoin = 'round';
   }
 
@@ -537,7 +497,7 @@ export class CanvasComponent {
   onRightClick(e: MouseEvent) {
     e.preventDefault();
     const dialogRef = this.dialog.open(ModalToolPropertiesComponent, {
-      data: this.selectedTool,
+      data: this.canvasState.selectedTool,
       width: '300px',
       height: '250px',
     });
@@ -649,13 +609,12 @@ export class CanvasComponent {
         break;
 
       case 'globalPropertiesChanged':
-        this.color.setValue(this.canvasState.color);
         this.context.strokeStyle = this.canvasState.color;
         break;
 
       case 'toolPropertiesChanged':
         const toolState = this.canvasState.toolsState.find(
-          (ts) => ts.name === this.selectedTool.name
+          (ts) => ts.name === this.canvasState.selectedTool.name
         );
         this.updateSelectedToolState(toolState!);
         break;
