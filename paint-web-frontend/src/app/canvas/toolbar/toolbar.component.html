@@ -1,5 +1,10 @@
 <div id="top-panel">
-  <div id="toolbar">
+  <div
+    id="toolbar"
+    cdkDropList
+    cdkDropListOrientation="horizontal"
+    (cdkDropListDropped)="drop($event)"
+  >
     <!-- Tools -->
     <ng-container *ngFor="let t of tools">
       <button
@@ -8,6 +13,7 @@
         [ngClass]="{
           'tool-selected': canvasState.selectedTool.name === t.name
         }"
+        cdkDrag
       >
         <mat-icon fontIcon="{{ t.iconName }}"></mat-icon>
       </button>
