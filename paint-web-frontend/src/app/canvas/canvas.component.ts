@@ -7,10 +7,11 @@ import { CaretakerService } from '../state-management/caretaker.service';
 import { CanvasState } from '../interfaces/canvas-state';
 import { Point } from '../interfaces/shapes/point.interface';
 import { BezierCurve } from '../interfaces/shapes/bezier-curver.interface';
-import { BezierCurveCircle } from '../interfaces/shapes/bezier-curve-circle.interface';
-import { Line } from '../interfaces/shapes/line.interface';
-import { Rectangle } from '../interfaces/shapes/rectangle.interface';
+import { BezierCurveCircle } from '../interfaces/shapes/bezier-curve-circle';
+import { Rectangle } from '../interfaces/shapes/rectangle';
 import { Memento } from '../state-management/memento.interface';
+import { Line } from '../interfaces/shapes/line';
+import { Shape } from '../interfaces/shapes/shape';
 
 @Component({
   selector: 'app-canvas',
@@ -133,9 +134,7 @@ export class CanvasComponent {
       latestOperation: 'none',
       color: 'black',
       toolsState: toolsState,
-      lines: [],
-      circles: [],
-      rectangles: [],
+      shapes: [],
       disabled: false,
       selectedTool: paintbrush,
     };
@@ -193,11 +192,7 @@ export class CanvasComponent {
     switch (this.canvasState.selectedTool.name) {
       case 'paintbrush':
       case 'eraser':
-        this.line = {
-          points: [],
-          color: this.context.strokeStyle,
-          lineWidth: this.context.lineWidth,
-        };
+        this.line = new Line(this.context.strokeStyle, this.context.lineWidth);
 
         this.saveState('drawing');
         this.context.beginPath();
@@ -214,12 +209,14 @@ export class CanvasComponent {
     switch (this.canvasState.selectedTool.name) {
       case 'paintbrush':
       case 'eraser':
-        if (this.line) this.canvasState.lines.push(this.line);
+        if (this.line) {
+          this.canvasState.shapes.push(this.line);
+        }
         break;
 
       case 'circle':
         if (this.bezierCurveCircle)
-          this.canvasState.circles.push(this.bezierCurveCircle);
+          this.canvasState.shapes.push(this.bezierCurveCircle);
         this.bezierCurveCircle = null;
         break;
     }
@@ -282,28 +279,7 @@ export class CanvasComponent {
   private draw(x: number, y: number) {
     this.context.lineTo(x, y);
     this.context.stroke();
-    this.line.points.push({ x, y });
-  }
-
-  /**
-   * Redraw line after the state is restored.
-   * @param line
-   */
-  private redrawLineOnStageRestore(line: Line) {
-    const previousColor = this.context.strokeStyle;
-
-    this.context.lineWidth = line.lineWidth;
-    this.context.strokeStyle = line.color;
-    this.context.beginPath();
-
-    line.points.forEach((p) => {
-      this.context.lineTo(p.x, p.y);
-    });
-
-    this.context.stroke();
-    this.context.closePath();
-    this.context.lineWidth = this.canvasState.selectedTool.lineWidth;
-    this.context.strokeStyle = previousColor;
+    this.line.pushPoint({ x, y });
   }
 
   /**
@@ -316,13 +292,10 @@ export class CanvasComponent {
     this.undoOperation(false);
     this.saveState('drawing');
 
-    this.context.beginPath();
-
     const start: Point = {
       x: this.start.x,
       y: this.start.y + (y - this.start.y) / 2,
     };
-    this.context.moveTo(start.x, start.y);
 
     const topBezierCurve: BezierCurve = {
       cp1: { x: this.start.x, y: this.start.y },
@@ -330,86 +303,21 @@ export class CanvasComponent {
       end: { x, y: this.start.y + (y - this.start.y) / 2 },
     };
 
-    this.drawBezierCurveTo(topBezierCurve);
-
     const bottomBezierCurve: BezierCurve = {
       cp1: { x, y },
       cp2: { x: this.start.x, y },
       end: { x: this.start.x, y: this.start.y + (y - this.start.y) / 2 },
     };
 
-    this.drawBezierCurveTo(bottomBezierCurve);
-
-    this.context.fill();
-
-    this.context.stroke();
-    this.context.closePath();
-
-    this.bezierCurveCircle = {
+    this.bezierCurveCircle = new BezierCurveCircle(
+      this.canvasState.color,
+      this.context.lineWidth,
       start,
       topBezierCurve,
       bottomBezierCurve,
-      color: this.canvasState.color,
-      lineWidth: this.context.lineWidth,
-    };
-  }
+    )
 
-  /**
-   * Draw a Bezier Curvel.
-   * @param bezierCurve Curve to be drawn.
-   */
-  private drawBezierCurveTo(bezierCurve: BezierCurve) {
-    this.context.bezierCurveTo(
-      bezierCurve.cp1.x,
-      bezierCurve.cp1.y,
-      bezierCurve.cp2.x,
-      bezierCurve.cp2.y,
-      bezierCurve.end.x,
-      bezierCurve.end.y
-    );
-  }
-
-  /**
-   * Redraw circle after the state is restored.
-   * @param circle
-   */
-  private redrawCircleOnStageRestore(circle: BezierCurveCircle) {
-    this.context.lineWidth = circle.lineWidth;
-    this.context.strokeStyle = circle.color;
-    this.context.fillStyle = circle.color;
-    this.context.beginPath();
-
-    this.context.moveTo(circle.start.x, circle.start.y);
-
-    this.drawBezierCurveTo(circle.topBezierCurve);
-    this.drawBezierCurveTo(circle.bottomBezierCurve);
-
-    this.context.fill();
-    this.context.stroke();
-    this.context.closePath();
-
-    this.context.lineWidth = this.canvasState.selectedTool.lineWidth;
-    this.context.strokeStyle = this.canvasState.color;
-    this.context.fillStyle = this.canvasState.color;
-  }
-
-  /**
-   * Redraw a rectangle after the state is restored.
-   * @param rect
-   */
-  private redrawRectangleOnStageRestore(rect: Rectangle) {
-    this.context.lineWidth = rect.lineWidth;
-    this.context.strokeStyle = rect.color;
-
-    this.context.beginPath();
-
-    this.context.rect(rect.x1, rect.y1, rect.x2, rect.y2);
-
-    this.context.stroke();
-    this.context.closePath();
-
-    this.context.lineWidth = this.canvasState.selectedTool.lineWidth;
-    this.context.strokeStyle = this.canvasState.color;
+    this.bezierCurveCircle.draw(this.context);
   }
 
   /**
@@ -430,22 +338,15 @@ export class CanvasComponent {
   clearContent() {
     this.saveState('drawing');
 
-    const rect: Rectangle = {
-      x1: 0,
-      y1: 0,
-      x2: this.canvasElement.width,
-      y2: this.canvasElement.height,
-      color: 'white',
-      lineWidth: 0,
-    };
+    const rect: Rectangle = new Rectangle(
+      'white', 0, { x: 0 , y: 0 },
+      { x: this.canvasElement.width , y: this.canvasElement.height },
+    )
     this.context.clearRect(rect.x1, rect.y1, rect.x2, rect.y2);
 
     // removing stored shapes
-    this.canvasState.circles = [];
-    this.canvasState.lines = [];
-    this.canvasState.rectangles = [];
-
-    this.canvasState.rectangles.push(rect);
+    this.canvasState.shapes = [];
+    this.canvasState.shapes.push(rect);
   }
 
   /**
@@ -592,20 +493,7 @@ export class CanvasComponent {
 
     switch (this.latestOperation) {
       case 'drawing':
-        this.clearContentOnStageRestore();
-        // redrawing content
-        this.canvasState.circles.forEach((circle: BezierCurveCircle) => {
-          this.redrawCircleOnStageRestore(circle);
-        });
-
-        this.canvasState.lines.forEach((line: Line) => {
-          this.redrawLineOnStageRestore(line);
-        });
-
-        this.canvasState.rectangles.forEach((rect: Rectangle) => {
-          this.redrawRectangleOnStageRestore(rect);
-        });
-
+        this.redrawContent(this.canvasState.shapes);
         break;
 
       case 'globalPropertiesChanged':
@@ -620,5 +508,39 @@ export class CanvasComponent {
         break;
     }
     this.latestOperation = memento.getLatestOperation();
+  }
+
+  /**
+   * Method to redraw all the content
+   * @param shapes 
+   */
+  private redrawContent(shapes: Shape[]) {
+    this.clearContentOnStageRestore();
+
+    shapes.forEach((shape) => {
+      let sInstance;
+
+      switch (shape.type) {
+        case 'line':
+          const l = <Line> shape;
+          sInstance = new Line(shape.color, shape.lineWidth, l.points);
+          break;
+        
+        case 'circ':
+          const c = <BezierCurveCircle> shape;
+          sInstance = new BezierCurveCircle(shape.color, shape.lineWidth, 
+            c.start, c.topBezierCurve, c.bottomBezierCurve);
+          break;
+        
+        case 'rect':
+          const r = <Rectangle> shape;
+          sInstance = new Rectangle(shape.color, shape.lineWidth, { x: r.x1, y: r.y1 }
+            ,{ x: r.x2, y: r.y2 }
+          );
+          break;
+      }
+
+      if (sInstance) sInstance.draw(this.context);
+    });
   }
 }

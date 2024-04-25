@@ -1,7 +1,5 @@
 import { CanvasTool } from './canvas-tool.interface';
-import { BezierCurveCircle } from './shapes/bezier-curve-circle.interface';
-import { Line } from './shapes/line.interface';
-import { Rectangle } from './shapes/rectangle.interface';
+import { Shape } from './shapes/shape';
 
 export interface CanvasState {
   /**
@@ -21,19 +19,9 @@ export interface CanvasState {
   toolsState: CanvasTool[];
 
   /**
-   * Lines drawn on the canvas.
+   * Shapes drawn on the canvas.
    */
-  lines: Line[];
-
-  /**
-   * Circles drawn on the canvas.
-   */
-  circles: BezierCurveCircle[];
-
-  /**
-   * Rectangles drawn on the canvas.
-   */
-  rectangles: Rectangle[];
+  shapes: Shape[];
 
   /**
    * Flag to determine if changes on canvas are allowed.
