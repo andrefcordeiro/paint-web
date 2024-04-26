@@ -1,30 +1,24 @@
-import { Point } from "./point.interface";
-import { Shape } from "./shape";
+import { Point } from '../../interfaces/shapes/point.interface';
+import { Shape } from './shape';
 
-export class Rectangle extends Shape {
-  x1: number;
-
-  y1: number;
-
-  x2: number;
-
-  y2: number;
+export class Line extends Shape {
+  points: Point[] = [];
 
   constructor(
     color: string | CanvasGradient | CanvasPattern,
     lineWidth: number,
-    p1: Point,
-    p2: Point,
+    points: Point[] = []
   ) {
-    super('rect', color, lineWidth);
-    this.x1 = p1.x;
-    this.y1 = p1.y;
-    this.x2 = p2.x;
-    this.y2 = p2.y;
+    super('line', color, lineWidth);
+    this.points = points;
+  }
+
+  pushPoint(point: Point) {
+    this.points.push(point);
   }
 
    /**
-   * Method to draw the rectangle on a canvas.
+   * Method to draw the line on a canvas.
    * @param context Context of the canvas.
    */
   draw(context: CanvasRenderingContext2D): void {
@@ -33,14 +27,15 @@ export class Rectangle extends Shape {
 
     context.lineWidth = this.lineWidth;
     context.strokeStyle = this.color;
-
     context.beginPath();
 
-    context.rect(this.x1, this.y1, this.x2, this.y2);
+    this.points.forEach((p) => {
+      context.lineTo(p.x, p.y);
+    });
 
     context.stroke();
     context.closePath();
-
+    
     context.strokeStyle = previousColor;
     context.lineWidth = previousLineWidth;
   }

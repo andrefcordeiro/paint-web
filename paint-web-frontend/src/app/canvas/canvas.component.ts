@@ -6,12 +6,11 @@ import { CanvasMemento } from '../interfaces/canvas-memento';
 import { CaretakerService } from '../state-management/caretaker.service';
 import { CanvasState } from '../interfaces/canvas-state';
 import { Point } from '../interfaces/shapes/point.interface';
-import { BezierCurve } from '../interfaces/shapes/bezier-curver.interface';
-import { BezierCurveCircle } from '../interfaces/shapes/bezier-curve-circle';
-import { Rectangle } from '../interfaces/shapes/rectangle';
+import { Circle } from './shapes/circle';
+import { Rectangle } from './shapes/rectangle';
 import { Memento } from '../state-management/memento.interface';
-import { Line } from '../interfaces/shapes/line';
-import { Shape } from '../interfaces/shapes/shape';
+import { Line } from './shapes/line';
+import { Shape } from './shapes/shape';
 
 @Component({
   selector: 'app-canvas',
@@ -86,9 +85,9 @@ export class CanvasComponent {
   latestOperation = 'drawing';
 
   /**
-   * Latest bezierCurveCircle drawn
+   * Latest circle drawn
    */
-  bezierCurveCircle: BezierCurveCircle | null;
+  circle: Circle | null;
 
   /**
    * Current line being drawn on the canvas.
@@ -215,9 +214,9 @@ export class CanvasComponent {
         break;
 
       case 'circle':
-        if (this.bezierCurveCircle)
-          this.canvasState.shapes.push(this.bezierCurveCircle);
-        this.bezierCurveCircle = null;
+        if (this.circle)
+          this.canvasState.shapes.push(this.circle);
+        this.circle = null;
         break;
     }
 
@@ -292,32 +291,14 @@ export class CanvasComponent {
     this.undoOperation(false);
     this.saveState('drawing');
 
-    const start: Point = {
-      x: this.start.x,
-      y: this.start.y + (y - this.start.y) / 2,
-    };
-
-    const topBezierCurve: BezierCurve = {
-      cp1: { x: this.start.x, y: this.start.y },
-      cp2: { x, y: this.start.y },
-      end: { x, y: this.start.y + (y - this.start.y) / 2 },
-    };
-
-    const bottomBezierCurve: BezierCurve = {
-      cp1: { x, y },
-      cp2: { x: this.start.x, y },
-      end: { x: this.start.x, y: this.start.y + (y - this.start.y) / 2 },
-    };
-
-    this.bezierCurveCircle = new BezierCurveCircle(
+    this.circle = new Circle(
       this.canvasState.color,
       this.context.lineWidth,
-      start,
-      topBezierCurve,
-      bottomBezierCurve,
+      { x, y },
+      this.start,
     )
 
-    this.bezierCurveCircle.draw(this.context);
+    this.circle.draw(this.context);
   }
 
   /**
@@ -527,15 +508,14 @@ export class CanvasComponent {
           break;
         
         case 'circ':
-          const c = <BezierCurveCircle> shape;
-          sInstance = new BezierCurveCircle(shape.color, shape.lineWidth, 
-            c.start, c.topBezierCurve, c.bottomBezierCurve);
+          const c = <Circle> shape;
+          sInstance = Circle.createFromAnotherInstance(c);
           break;
         
         case 'rect':
           const r = <Rectangle> shape;
-          sInstance = new Rectangle(shape.color, shape.lineWidth, { x: r.x1, y: r.y1 }
-            ,{ x: r.x2, y: r.y2 }
+          sInstance = new Rectangle(shape.color, shape.lineWidth, 
+            { x: r.x1, y: r.y1 }, { x: r.x2, y: r.y2 }
           );
           break;
       }

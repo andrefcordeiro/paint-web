@@ -1,8 +1,15 @@
-import { BezierCurve } from './bezier-curver.interface';
-import { Point } from './point.interface';
+import { Point } from '../../interfaces/shapes/point.interface';
 import { Shape } from './shape';
 
-export class BezierCurveCircle extends Shape {
+interface BezierCurve {
+  cp1: Point;
+
+  cp2: Point;
+
+  end: Point;
+}
+
+export class Circle extends Shape {
   start: Point;
 
   topBezierCurve: BezierCurve;
@@ -12,14 +19,43 @@ export class BezierCurveCircle extends Shape {
   constructor(
     color: string | CanvasGradient | CanvasPattern,
     lineWidth: number,
-    start: Point,
-    topBezierCurve: BezierCurve,
-    bottomBezierCurve: BezierCurve
+    p?: Point,
+    start?: Point,
   ) {
     super('circ', color, lineWidth);
-    this.start = start;
-    this.topBezierCurve = topBezierCurve;
-    this.bottomBezierCurve = bottomBezierCurve;
+
+    if (!start || !p) return;
+
+    this.start = {
+      x: start.x,
+      y: start.y + (p.y - start.y) / 2,
+    };
+
+    this.topBezierCurve = {
+      cp1: { x: start.x, y: start.y },
+      cp2: { x: p.x, y: start.y },
+      end: { x: p.x, y: start.y + (p.y - start.y) / 2 },
+    };
+
+    this.bottomBezierCurve = {
+      cp1: { x: p.x, y: p.y },
+      cp2: { x: start.x, y: p.y },
+      end: { x: start.x, y: start.y + (p.y - start.y) / 2 },
+    };
+  }
+  
+  /**
+   * Create a Circle instance from another instance.
+   * @param circle 
+   * @returns Circle
+   */
+  public static createFromAnotherInstance(circle: Circle): Circle  {
+    const newCircle = new Circle(circle.color, circle.lineWidth);
+    newCircle.start = circle.start;
+    newCircle.topBezierCurve = circle.topBezierCurve;
+    newCircle.bottomBezierCurve = circle.bottomBezierCurve;
+
+    return newCircle;
   }
 
   /**
