@@ -16,6 +16,8 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { CaretakerService } from './state-management/caretaker.service';
 import { ToolbarComponent } from './canvas/toolbar/toolbar.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
+import { MultiToolButtonComponent } from './canvas/toolbar/multi-tool-button/multi-tool-button.component';
+import { OverlayModule } from '@angular/cdk/overlay';
 
 @NgModule({
   declarations: [
@@ -23,6 +25,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
     CanvasComponent,
     ModalToolPropertiesComponent,
     ToolbarComponent,
+    MultiToolButtonComponent,
   ],
   imports: [
     BrowserModule,
@@ -36,6 +39,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
     MatCardModule,
     ReactiveFormsModule,
     DragDropModule,
+    OverlayModule,
   ],
   providers: [CaretakerService],
   bootstrap: [AppComponent],

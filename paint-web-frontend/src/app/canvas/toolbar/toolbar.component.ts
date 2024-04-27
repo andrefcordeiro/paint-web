@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CanvasState } from 'src/app/interfaces/canvas-state';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+import { ToolButton } from 'src/app/interfaces/tool-button.interface';
 
 @Component({
   selector: 'app-toolbar',
@@ -11,7 +12,7 @@ export class ToolbarComponent {
   /**
    * Available tools.
    */
-  @Input() tools: any[];
+  @Input() tools: ToolButton[];
 
   /**
    * State of the canvas.

@@ -20,7 +20,7 @@ export class Circle extends Shape {
     color: string | CanvasGradient | CanvasPattern,
     lineWidth: number,
     p?: Point,
-    start?: Point,
+    start?: Point
   ) {
     super('circ', color, lineWidth);
 
@@ -43,13 +43,13 @@ export class Circle extends Shape {
       end: { x: start.x, y: start.y + (p.y - start.y) / 2 },
     };
   }
-  
+
   /**
    * Create a Circle instance from another instance.
-   * @param circle 
+   * @param circle
    * @returns Circle
    */
-  public static createFromAnotherInstance(circle: Circle): Circle  {
+  public static createFromAnotherInstance(circle: Circle): Circle {
     const newCircle = new Circle(circle.color, circle.lineWidth);
     newCircle.start = circle.start;
     newCircle.topBezierCurve = circle.topBezierCurve;
@@ -63,15 +63,9 @@ export class Circle extends Shape {
    * @param context Context of the canvas.
    */
   draw(context: CanvasRenderingContext2D): void {
-    const previousColor = context.strokeStyle;
-    const previousLineWidth = context.lineWidth;
-    const previousFillStyle = context.fillStyle;
+    this.setToolPropertiesContext(context);
 
-    context.lineWidth = this.lineWidth;
-    context.strokeStyle = this.color;
-    context.fillStyle = this.color;
     context.beginPath();
-
     context.moveTo(this.start.x, this.start.y);
 
     this.drawBezierCurveTo(this.topBezierCurve, context);
@@ -81,16 +75,17 @@ export class Circle extends Shape {
     context.stroke();
     context.closePath();
 
-    context.strokeStyle = previousColor;
-    context.lineWidth = previousLineWidth;
-    context.fillStyle = previousFillStyle;
+    this.unsetToolPropertiesContext(context);
   }
 
   /**
    * Draw a Bezier Curve.
    * @param bezierCurve Curve to be drawn.
    */
-  private drawBezierCurveTo(bezierCurve: BezierCurve, context: CanvasRenderingContext2D) {
+  private drawBezierCurveTo(
+    bezierCurve: BezierCurve,
+    context: CanvasRenderingContext2D
+  ) {
     context.bezierCurveTo(
       bezierCurve.cp1.x,
       bezierCurve.cp1.y,

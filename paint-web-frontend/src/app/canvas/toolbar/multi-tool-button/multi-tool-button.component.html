@@ -1,0 +1,27 @@
+<button
+  (contextmenu)="openOptionsList($event)"
+  cdkOverlayOrigin
+  #trigger="cdkOverlayOrigin"
+>
+  <mat-icon fontIcon="{{ selectedOption.iconName }}"></mat-icon>
+</button>
+
+<ng-template
+  cdkConnectedOverlay
+  [cdkConnectedOverlayOrigin]="trigger"
+  [cdkConnectedOverlayOpen]="isOpen"
+  *ngIf="isOpen"
+>
+  <ng-container *ngFor="let op of tool.options">
+    <button
+      mat-menu-item
+      (click)="
+        selectedOption = op;
+        this.selectedOption.onclickFunction(selectedOption.name);
+        isOpen = !this.isOpen
+      "
+    >
+      <mat-icon fontIcon="{{ op.iconName }}"></mat-icon>
+    </button>
+  </ng-container>
+</ng-template>

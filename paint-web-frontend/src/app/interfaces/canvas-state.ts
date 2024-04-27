@@ -1,5 +1,5 @@
 import { CanvasTool } from './canvas-tool.interface';
-import { Shape } from './shapes/shape';
+import { Shape } from '../canvas/shapes/shape';
 
 export interface CanvasState {
   /**

@@ -17,13 +17,12 @@ export class Line extends Shape {
     this.points.push(point);
   }
 
-   /**
+  /**
    * Method to draw the line on a canvas.
    * @param context Context of the canvas.
    */
   draw(context: CanvasRenderingContext2D): void {
-    const previousColor = context.strokeStyle;
-    const previousLineWidth = context.lineWidth;
+    this.setToolPropertiesContext(context);
 
     context.lineWidth = this.lineWidth;
     context.strokeStyle = this.color;
@@ -35,8 +34,7 @@ export class Line extends Shape {
 
     context.stroke();
     context.closePath();
-    
-    context.strokeStyle = previousColor;
-    context.lineWidth = previousLineWidth;
+
+    this.unsetToolPropertiesContext(context);
   }
 }

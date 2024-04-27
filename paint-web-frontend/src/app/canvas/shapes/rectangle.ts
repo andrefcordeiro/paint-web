@@ -1,5 +1,5 @@
-import { Point } from "../../interfaces/shapes/point.interface";
-import { Shape } from "./shape";
+import { Point } from '../../interfaces/shapes/point.interface';
+import { Shape } from './shape';
 
 export class Rectangle extends Shape {
   x1: number;
@@ -14,7 +14,7 @@ export class Rectangle extends Shape {
     color: string | CanvasGradient | CanvasPattern,
     lineWidth: number,
     p1: Point,
-    p2: Point,
+    p2: Point
   ) {
     super('rect', color, lineWidth);
     this.x1 = p1.x;
@@ -23,25 +23,24 @@ export class Rectangle extends Shape {
     this.y2 = p2.y;
   }
 
-   /**
+  /**
    * Method to draw the rectangle on a canvas.
    * @param context Context of the canvas.
    */
   draw(context: CanvasRenderingContext2D): void {
-    const previousColor = context.strokeStyle;
-    const previousLineWidth = context.lineWidth;
+    this.setToolPropertiesContext(context);
 
     context.lineWidth = this.lineWidth;
     context.strokeStyle = this.color;
-
+    context.fillStyle = this.color;
     context.beginPath();
 
     context.rect(this.x1, this.y1, this.x2, this.y2);
 
+    context.fill();
     context.stroke();
     context.closePath();
 
-    context.strokeStyle = previousColor;
-    context.lineWidth = previousLineWidth;
+    this.unsetToolPropertiesContext(context);
   }
 }

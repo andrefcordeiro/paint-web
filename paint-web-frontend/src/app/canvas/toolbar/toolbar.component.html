@@ -7,7 +7,11 @@
   >
     <!-- Tools -->
     <ng-container *ngFor="let t of tools">
+      <app-multi-tool-button *ngIf="t.multiTool" [tool]="t" cdkDrag>
+      </app-multi-tool-button>
+
       <button
+        *ngIf="!t.multiTool"
         mat-button
         (click)="t.onclickFunction(t.name)"
         [ngClass]="{

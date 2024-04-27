@@ -11,6 +11,7 @@ import { Rectangle } from './shapes/rectangle';
 import { Memento } from '../state-management/memento.interface';
 import { Line } from './shapes/line';
 import { Shape } from './shapes/shape';
+import { ToolButton } from '../interfaces/tool-button.interface';
 
 @Component({
   selector: 'app-canvas',
@@ -41,7 +42,7 @@ export class CanvasComponent {
   /**
    * Available tools.
    */
-  tools = [
+  tools: ToolButton[] = [
     {
       name: 'paintbrush',
       iconName: 'brush icon',
@@ -53,9 +54,21 @@ export class CanvasComponent {
       onclickFunction: this.setSelectedTool.bind(this),
     },
     {
-      name: 'circle',
-      iconName: 'panorama_fish_eye icon',
+      name: 'shapes',
+      multiTool: true,
       onclickFunction: this.setSelectedTool.bind(this),
+      options: [
+        {
+          name: 'circle',
+          iconName: 'panorama_fish_eye icon',
+          onclickFunction: this.setSelectedTool.bind(this),
+        },
+        {
+          name: 'rect',
+          iconName: 'crop_square icon',
+          onclickFunction: this.setSelectedTool.bind(this),
+        },
+      ],
     },
     {
       name: 'clear',
@@ -85,14 +98,9 @@ export class CanvasComponent {
   latestOperation = 'drawing';
 
   /**
-   * Latest circle drawn
+   * Current shape being drawn on the canvas.
    */
-  circle: Circle | null;
-
-  /**
-   * Current line being drawn on the canvas.
-   */
-  line: Line;
+  shape: Shape | null;
 
   /**
    * Returns the nativeElement of the canvas.
@@ -126,8 +134,9 @@ export class CanvasComponent {
     const paintbrush: CanvasTool = { name: 'paintbrush', lineWidth: 5 };
     const eraser: CanvasTool = { name: 'eraser', lineWidth: 5 };
     const circle: CanvasTool = { name: 'circle', lineWidth: 5 };
+    const rect: CanvasTool = { name: 'rect', lineWidth: 5 };
 
-    const toolsState = [paintbrush, eraser, circle];
+    const toolsState = [paintbrush, eraser, circle, rect];
 
     this.canvasState = {
       latestOperation: 'none',
@@ -191,13 +200,14 @@ export class CanvasComponent {
     switch (this.canvasState.selectedTool.name) {
       case 'paintbrush':
       case 'eraser':
-        this.line = new Line(this.context.strokeStyle, this.context.lineWidth);
+        this.shape = new Line(this.context.strokeStyle, this.context.lineWidth);
 
         this.saveState('drawing');
         this.context.beginPath();
         break;
 
       case 'circle':
+      case 'rect':
         this.saveState('drawing');
         this.start = p;
         break;
@@ -208,15 +218,13 @@ export class CanvasComponent {
     switch (this.canvasState.selectedTool.name) {
       case 'paintbrush':
       case 'eraser':
-        if (this.line) {
-          this.canvasState.shapes.push(this.line);
-        }
+        if (this.shape) this.canvasState.shapes.push(this.shape);
         break;
 
       case 'circle':
-        if (this.circle)
-          this.canvasState.shapes.push(this.circle);
-        this.circle = null;
+      case 'rect':
+        if (this.shape) this.canvasState.shapes.push(this.shape);
+        this.shape = null;
         break;
     }
 
@@ -231,11 +239,27 @@ export class CanvasComponent {
       switch (this.canvasState.selectedTool.name) {
         case 'paintbrush':
         case 'eraser':
-          this.draw(p.x, p.y);
+          this.drawLine(p.x, p.y);
           break;
 
         case 'circle':
-          this.drawCircle(p.x, p.y);
+          this.shape = new Circle(
+            this.canvasState.color,
+            this.context.lineWidth,
+            { x: p.x, y: p.y },
+            this.start
+          );
+          this.drawShape(this.shape);
+          break;
+
+        case 'rect':
+          this.shape = new Rectangle(
+            this.canvasState.color,
+            this.context.lineWidth,
+            { x: this.start.x, y: this.start.y },
+            { x: p.x - this.start.x, y: p.y - this.start.y }
+          );
+          this.drawShape(this.shape);
           break;
       }
     }
@@ -275,30 +299,22 @@ export class CanvasComponent {
    * @param x X coordinate.
    * @param y Y coordinate.
    */
-  private draw(x: number, y: number) {
+  private drawLine(x: number, y: number) {
     this.context.lineTo(x, y);
     this.context.stroke();
-    this.line.pushPoint({ x, y });
+    (this.shape as Line).pushPoint({ x, y });
   }
 
   /**
-   * Draw circle on the canvas.
-   * @param x X coordinate.
-   * @param y Y coordinate.
+   * Draw shape on the canvas.
+   * @param shape Shape.
    */
-  private async drawCircle(x: number, y: number) {
+  private drawShape(shape: Shape) {
     // restoring canvas state everytime a new circle is drawn
     this.undoOperation(false);
     this.saveState('drawing');
 
-    this.circle = new Circle(
-      this.canvasState.color,
-      this.context.lineWidth,
-      { x, y },
-      this.start,
-    )
-
-    this.circle.draw(this.context);
+    shape.draw(this.context);
   }
 
   /**
@@ -320,9 +336,11 @@ export class CanvasComponent {
     this.saveState('drawing');
 
     const rect: Rectangle = new Rectangle(
-      'white', 0, { x: 0 , y: 0 },
-      { x: this.canvasElement.width , y: this.canvasElement.height },
-    )
+      'white',
+      0,
+      { x: 0, y: 0 },
+      { x: this.canvasElement.width, y: this.canvasElement.height }
+    );
     this.context.clearRect(rect.x1, rect.y1, rect.x2, rect.y2);
 
     // removing stored shapes
@@ -493,7 +511,7 @@ export class CanvasComponent {
 
   /**
    * Method to redraw all the content
-   * @param shapes 
+   * @param shapes
    */
   private redrawContent(shapes: Shape[]) {
     this.clearContentOnStageRestore();
@@ -503,19 +521,22 @@ export class CanvasComponent {
 
       switch (shape.type) {
         case 'line':
-          const l = <Line> shape;
+          const l = <Line>shape;
           sInstance = new Line(shape.color, shape.lineWidth, l.points);
           break;
-        
+
         case 'circ':
-          const c = <Circle> shape;
+          const c = <Circle>shape;
           sInstance = Circle.createFromAnotherInstance(c);
           break;
-        
+
         case 'rect':
-          const r = <Rectangle> shape;
-          sInstance = new Rectangle(shape.color, shape.lineWidth, 
-            { x: r.x1, y: r.y1 }, { x: r.x2, y: r.y2 }
+          const r = <Rectangle>shape;
+          sInstance = new Rectangle(
+            shape.color,
+            shape.lineWidth,
+            { x: r.x1, y: r.y1 },
+            { x: r.x2, y: r.y2 }
           );
           break;
       }
