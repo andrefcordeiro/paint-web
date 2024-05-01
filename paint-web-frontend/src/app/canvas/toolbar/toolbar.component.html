@@ -13,7 +13,7 @@
       <button
         *ngIf="!t.multiTool"
         mat-button
-        (click)="t.onclickFunction(t.name)"
+        (click)="t.onclickFunction ? t.onclickFunction(t.name) : null"
         [ngClass]="{
           'tool-selected': canvasState.selectedTool.name === t.name
         }"

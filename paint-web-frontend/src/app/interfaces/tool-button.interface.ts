@@ -3,7 +3,7 @@ export interface ToolButton {
 
   iconName?: string;
 
-  onclickFunction: (name: string) => void;
+  onclickFunction: ((name: string) => void) | null;
 
   multiTool?: boolean;
 

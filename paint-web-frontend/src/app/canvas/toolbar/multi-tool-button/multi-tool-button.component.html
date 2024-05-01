@@ -2,6 +2,7 @@
   (contextmenu)="openOptionsList($event)"
   cdkOverlayOrigin
   #trigger="cdkOverlayOrigin"
+  (click)="this.selectedOption.onclickFunction(selectedOption.name)"
 >
   <mat-icon fontIcon="{{ selectedOption.iconName }}"></mat-icon>
 </button>

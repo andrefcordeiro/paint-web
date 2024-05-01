@@ -56,7 +56,7 @@ export class CanvasComponent {
     {
       name: 'shapes',
       multiTool: true,
-      onclickFunction: this.setSelectedTool.bind(this),
+      onclickFunction: null,
       options: [
         {
           name: 'circle',
@@ -215,18 +215,8 @@ export class CanvasComponent {
   }
 
   onMouseUp(e: MouseEvent) {
-    switch (this.canvasState.selectedTool.name) {
-      case 'paintbrush':
-      case 'eraser':
-        if (this.shape) this.canvasState.shapes.push(this.shape);
-        break;
-
-      case 'circle':
-      case 'rect':
-        if (this.shape) this.canvasState.shapes.push(this.shape);
-        this.shape = null;
-        break;
-    }
+    if (this.shape) this.canvasState.shapes.push(this.shape);
+    this.shape = null;
 
     this.mouseDown = false;
     this.context.closePath();
@@ -383,7 +373,7 @@ export class CanvasComponent {
     if (this.canvasState.selectedTool.name === 'eraser') {
       this.context.strokeStyle = this.backgroundColor;
     }
-    if (['paintbrush', 'circle'].includes(this.canvasState.selectedTool.name)) {
+    if (['paintbrush', 'circle', 'rect'].includes(this.canvasState.selectedTool.name)) {
       this.context.strokeStyle = this.canvasState.color;
     }
     this.context.lineWidth = this.canvasState.selectedTool.lineWidth;
