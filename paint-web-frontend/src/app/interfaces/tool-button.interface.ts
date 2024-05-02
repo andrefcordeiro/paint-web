@@ -1,3 +1,6 @@
+/**
+ * Interface to represent the toolbar buttons.
+ */
 export interface ToolButton {
   name: string;
 

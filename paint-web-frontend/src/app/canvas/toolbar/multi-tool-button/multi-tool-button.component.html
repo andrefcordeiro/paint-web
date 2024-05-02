@@ -1,28 +1,32 @@
-<button
-  (contextmenu)="openOptionsList($event)"
-  cdkOverlayOrigin
-  #trigger="cdkOverlayOrigin"
-  (click)="this.selectedOption.onclickFunction(selectedOption.name)"
->
-  <mat-icon fontIcon="{{ selectedOption.iconName }}"></mat-icon>
-</button>
+<ng-container *ngIf="selectedOption">
+  <button
+    mat-button
+    (contextmenu)="openOptionsList($event)"
+    cdkOverlayOrigin
+    #trigger="cdkOverlayOrigin"
+    (click)="this.selectedOption.onclickFunction(selectedOption.name)"
+  >
+    <mat-icon fontIcon="{{ selectedOption.iconName }}"></mat-icon>
+  </button>
 
-<ng-template
-  cdkConnectedOverlay
-  [cdkConnectedOverlayOrigin]="trigger"
-  [cdkConnectedOverlayOpen]="isOpen"
-  *ngIf="isOpen"
->
-  <ng-container *ngFor="let op of tool.options">
-    <button
-      mat-menu-item
-      (click)="
-        selectedOption = op;
-        this.selectedOption.onclickFunction(selectedOption.name);
-        isOpen = !this.isOpen
-      "
-    >
-      <mat-icon fontIcon="{{ op.iconName }}"></mat-icon>
-    </button>
-  </ng-container>
-</ng-template>
+  <ng-template
+    cdkConnectedOverlay
+    [cdkConnectedOverlayOrigin]="trigger"
+    [cdkConnectedOverlayOpen]="isOpen"
+    *ngIf="isOpen"
+  >
+    <ng-container *ngFor="let op of tool.options">
+      <button
+        class="button-multi"
+        mat-menu-item
+        (click)="
+          selectedOption = op;
+          this.selectedOption.onclickFunction(selectedOption.name);
+          isOpen = !this.isOpen
+        "
+      >
+        <mat-icon fontIcon="{{ op.iconName }}"></mat-icon>
+      </button>
+    </ng-container>
+  </ng-template>
+</ng-container>

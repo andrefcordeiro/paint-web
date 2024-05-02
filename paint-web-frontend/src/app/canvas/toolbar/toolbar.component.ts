@@ -40,4 +40,18 @@ export class ToolbarComponent {
   drop(event: CdkDragDrop<any[]>) {
     moveItemInArray(this.tools, event.previousIndex, event.currentIndex);
   }
+
+  /**
+   * Method that determines if the selected style class should be applied or not to a button.
+   * @param tool ToolButton.
+   * @returns True or false.
+   */
+  shouldApplySelectedStyle(tool: ToolButton): boolean {
+    if (tool.options) {
+      return tool.options?.some(
+        (opt) => opt.name === this.canvasState.selectedTool.name
+      );
+    }
+    return this.canvasState.selectedTool.name === tool.name;
+  }
 }
