@@ -2,16 +2,16 @@ import { Component, ElementRef, HostListener, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ModalToolPropertiesComponent } from './modal-tool-properties/modal-tool-properties.component';
 import { CanvasTool } from '../interfaces/canvas-tool.interface';
-import { FormControl, FormGroup } from '@angular/forms';
 import { CanvasMemento } from '../interfaces/canvas-memento';
 import { CaretakerService } from '../state-management/caretaker.service';
 import { CanvasState } from '../interfaces/canvas-state';
 import { Point } from '../interfaces/shapes/point.interface';
-import { BezierCurve } from '../interfaces/shapes/bezier-curver.interface';
-import { BezierCurveCircle } from '../interfaces/shapes/bezier-curve-circle.interface';
-import { Line } from '../interfaces/shapes/line.interface';
-import { Rectangle } from '../interfaces/shapes/rectangle.interface';
+import { Circle } from './shapes/circle';
+import { Rectangle } from './shapes/rectangle';
 import { Memento } from '../state-management/memento.interface';
+import { Line } from './shapes/line';
+import { Shape } from './shapes/shape';
+import { ToolButton } from '../interfaces/tool-button.interface';
 
 @Component({
   selector: 'app-canvas',
@@ -35,11 +35,6 @@ export class CanvasComponent {
   backgroundColor = 'white';
 
   /**
-   * Form with global properties that can be set on the top panel.
-   */
-  public globalPropertiesForm: FormGroup;
-
-  /**
    * Flag that determines whether the left mouse button is being pressed.
    */
   mouseDown = false;
@@ -47,7 +42,7 @@ export class CanvasComponent {
   /**
    * Available tools.
    */
-  tools = [
+  tools: ToolButton[] = [
     {
       name: 'paintbrush',
       iconName: 'brush icon',
@@ -59,9 +54,21 @@ export class CanvasComponent {
       onclickFunction: this.setSelectedTool.bind(this),
     },
     {
-      name: 'circle',
-      iconName: 'panorama_fish_eye icon',
-      onclickFunction: this.setSelectedTool.bind(this),
+      name: 'shapes',
+      multiTool: true,
+      onclickFunction: null,
+      options: [
+        {
+          name: 'circle',
+          iconName: 'panorama_fish_eye icon',
+          onclickFunction: this.setSelectedTool.bind(this),
+        },
+        {
+          name: 'rect',
+          iconName: 'crop_square icon',
+          onclickFunction: this.setSelectedTool.bind(this),
+        },
+      ],
     },
     {
       name: 'clear',
@@ -74,11 +81,6 @@ export class CanvasComponent {
       onclickFunction: this.downloadImage.bind(this),
     },
   ];
-
-  /**
-   * Selected tool.
-   */
-  selectedTool: CanvasTool;
 
   /**
    * Coordinates to draw circle with bezier curve.
@@ -96,32 +98,15 @@ export class CanvasComponent {
   latestOperation = 'drawing';
 
   /**
-   * Latest bezierCurveCircle drawn
+   * Current shape being drawn on the canvas.
    */
-  bezierCurveCircle: BezierCurveCircle | null;
-
-  /**
-   * Current line being drawn on the canvas.
-   */
-  line: Line;
-
-  /**
-   * Flag to determine if changes on canvas are allowed.
-   */
-  canvasDisabled = false;
+  shape: Shape | null;
 
   /**
    * Returns the nativeElement of the canvas.
    */
   get canvasElement(): HTMLCanvasElement {
     return this.canvas.nativeElement;
-  }
-
-  /**
-   * Returns the 'color' FormControl of the globalPropertiesForm.
-   */
-  get color(): FormControl {
-    return this.globalPropertiesForm.get('color') as FormControl;
   }
 
   /**
@@ -149,40 +134,30 @@ export class CanvasComponent {
     const paintbrush: CanvasTool = { name: 'paintbrush', lineWidth: 5 };
     const eraser: CanvasTool = { name: 'eraser', lineWidth: 5 };
     const circle: CanvasTool = { name: 'circle', lineWidth: 5 };
+    const rect: CanvasTool = { name: 'rect', lineWidth: 5 };
 
-    this.selectedTool = paintbrush;
-    const toolsState = [paintbrush, eraser, circle];
+    const toolsState = [paintbrush, eraser, circle, rect];
 
     this.canvasState = {
       latestOperation: 'none',
       color: 'black',
       toolsState: toolsState,
-      lines: [],
-      circles: [],
-      rectangles: [],
+      shapes: [],
+      disabled: false,
+      selectedTool: paintbrush,
     };
-
-    this.initializeGlobalPropertiesForm();
-  }
-
-  /**
-   * Initialize global properties.
-   */
-  private initializeGlobalPropertiesForm() {
-    this.globalPropertiesForm = new FormGroup({
-      color: new FormControl('black'),
-    });
   }
 
   /**
    * Method called whenever the color input is changed.
    */
-  onColorChange() {
-    if (this.selectedTool.name !== 'eraser') {
+  onColorChange(color: string) {
+    if (this.canvasState.selectedTool.name !== 'eraser') {
       this.saveState('globalPropertiesChanged');
 
-      this.canvasState.color = this.color.value;
-      this.context.strokeStyle = this.color.value;
+      this.canvasState.color = color;
+      this.context.strokeStyle = color;
+      this.context.fillStyle = color;
     }
   }
 
@@ -217,25 +192,22 @@ export class CanvasComponent {
    * Mouse events.
    */
   onMouseDown(e: MouseEvent) {
-    if (e.button !== 0 || this.canvasDisabled) return;
+    if (e.button !== 0 || this.canvasState.disabled) return;
 
     this.mouseDown = true;
     const p = this.getMouseCoordMinusOffset(e.clientX, e.clientY);
 
-    switch (this.selectedTool.name) {
+    switch (this.canvasState.selectedTool.name) {
       case 'paintbrush':
       case 'eraser':
-        this.line = {
-          points: [],
-          color: this.context.strokeStyle,
-          lineWidth: this.context.lineWidth,
-        };
+        this.shape = new Line(this.context.strokeStyle, this.context.lineWidth);
 
         this.saveState('drawing');
         this.context.beginPath();
         break;
 
       case 'circle':
+      case 'rect':
         this.saveState('drawing');
         this.start = p;
         break;
@@ -243,18 +215,8 @@ export class CanvasComponent {
   }
 
   onMouseUp(e: MouseEvent) {
-    switch (this.selectedTool.name) {
-      case 'paintbrush':
-      case 'eraser':
-        if (this.line) this.canvasState.lines.push(this.line);
-        break;
-
-      case 'circle':
-        if (this.bezierCurveCircle)
-          this.canvasState.circles.push(this.bezierCurveCircle);
-        this.bezierCurveCircle = null;
-        break;
-    }
+    if (this.shape) this.canvasState.shapes.push(this.shape);
+    this.shape = null;
 
     this.mouseDown = false;
     this.context.closePath();
@@ -264,14 +226,30 @@ export class CanvasComponent {
     if (this.mouseDown) {
       const p = this.getMouseCoordMinusOffset(e.clientX, e.clientY);
 
-      switch (this.selectedTool.name) {
+      switch (this.canvasState.selectedTool.name) {
         case 'paintbrush':
         case 'eraser':
-          this.draw(p.x, p.y);
+          this.drawLine(p.x, p.y);
           break;
 
         case 'circle':
-          this.drawCircle(p.x, p.y);
+          this.shape = new Circle(
+            this.canvasState.color,
+            this.context.lineWidth,
+            { x: p.x, y: p.y },
+            this.start
+          );
+          this.drawShape(this.shape);
+          break;
+
+        case 'rect':
+          this.shape = new Rectangle(
+            this.canvasState.color,
+            this.context.lineWidth,
+            { x: this.start.x, y: this.start.y },
+            { x: p.x - this.start.x, y: p.y - this.start.y }
+          );
+          this.drawShape(this.shape);
           break;
       }
     }
@@ -311,132 +289,22 @@ export class CanvasComponent {
    * @param x X coordinate.
    * @param y Y coordinate.
    */
-  private draw(x: number, y: number) {
+  private drawLine(x: number, y: number) {
     this.context.lineTo(x, y);
     this.context.stroke();
-    this.line.points.push({ x, y });
+    (this.shape as Line).pushPoint({ x, y });
   }
 
   /**
-   * Redraw line after the state is restored.
-   * @param line
+   * Draw shape on the canvas.
+   * @param shape Shape.
    */
-  private redrawLineOnStageRestore(line: Line) {
-    const previousColor = this.context.strokeStyle;
-
-    this.context.lineWidth = line.lineWidth;
-    this.context.strokeStyle = line.color;
-    this.context.beginPath();
-
-    line.points.forEach((p) => {
-      this.context.lineTo(p.x, p.y);
-    });
-
-    this.context.stroke();
-    this.context.closePath();
-    this.context.lineWidth = this.selectedTool.lineWidth;
-    this.context.strokeStyle = previousColor;
-  }
-
-  /**
-   * Draw circle on the canvas.
-   * @param x X coordinate.
-   * @param y Y coordinate.
-   */
-  private async drawCircle(x: number, y: number) {
+  private drawShape(shape: Shape) {
     // restoring canvas state everytime a new circle is drawn
     this.undoOperation(false);
     this.saveState('drawing');
 
-    this.context.beginPath();
-
-    const start: Point = {
-      x: this.start.x,
-      y: this.start.y + (y - this.start.y) / 2,
-    };
-    this.context.moveTo(start.x, start.y);
-
-    const topBezierCurve: BezierCurve = {
-      cp1: { x: this.start.x, y: this.start.y },
-      cp2: { x, y: this.start.y },
-      end: { x, y: this.start.y + (y - this.start.y) / 2 },
-    };
-
-    this.drawBezierCurveTo(topBezierCurve);
-
-    const bottomBezierCurve: BezierCurve = {
-      cp1: { x, y },
-      cp2: { x: this.start.x, y },
-      end: { x: this.start.x, y: this.start.y + (y - this.start.y) / 2 },
-    };
-
-    this.drawBezierCurveTo(bottomBezierCurve);
-
-    this.context.stroke();
-    this.context.closePath();
-
-    this.bezierCurveCircle = {
-      start,
-      topBezierCurve,
-      bottomBezierCurve,
-      color: this.color.value,
-      lineWidth: this.context.lineWidth,
-    };
-  }
-
-  /**
-   * Draw a Bezier Curvel.
-   * @param bezierCurve Curve to be drawn.
-   */
-  private drawBezierCurveTo(bezierCurve: BezierCurve) {
-    this.context.bezierCurveTo(
-      bezierCurve.cp1.x,
-      bezierCurve.cp1.y,
-      bezierCurve.cp2.x,
-      bezierCurve.cp2.y,
-      bezierCurve.end.x,
-      bezierCurve.end.y
-    );
-  }
-
-  /**
-   * Redraw circle after the state is restored.
-   * @param circle
-   */
-  private redrawCircleOnStageRestore(circle: BezierCurveCircle) {
-    this.context.lineWidth = circle.lineWidth;
-    this.context.strokeStyle = circle.color;
-    this.context.beginPath();
-
-    this.context.moveTo(circle.start.x, circle.start.y);
-
-    this.drawBezierCurveTo(circle.topBezierCurve);
-    this.drawBezierCurveTo(circle.bottomBezierCurve);
-
-    this.context.stroke();
-    this.context.closePath();
-
-    this.context.lineWidth = this.selectedTool.lineWidth;
-    this.context.strokeStyle = this.color.value;
-  }
-
-  /**
-   * Redraw a rectangle after the state is restored.
-   * @param rect
-   */
-  private redrawRectangleOnStageRestore(rect: Rectangle) {
-    this.context.lineWidth = rect.lineWidth;
-    this.context.strokeStyle = rect.color;
-
-    this.context.beginPath();
-
-    this.context.rect(rect.x1, rect.y1, rect.x2, rect.y2);
-
-    this.context.stroke();
-    this.context.closePath();
-
-    this.context.lineWidth = this.selectedTool.lineWidth;
-    this.context.strokeStyle = this.color.value;
+    shape.draw(this.context);
   }
 
   /**
@@ -457,22 +325,17 @@ export class CanvasComponent {
   clearContent() {
     this.saveState('drawing');
 
-    const rect: Rectangle = {
-      x1: 0,
-      y1: 0,
-      x2: this.canvasElement.width,
-      y2: this.canvasElement.height,
-      color: 'white',
-      lineWidth: 0,
-    };
+    const rect: Rectangle = new Rectangle(
+      'white',
+      0,
+      { x: 0, y: 0 },
+      { x: this.canvasElement.width, y: this.canvasElement.height }
+    );
     this.context.clearRect(rect.x1, rect.y1, rect.x2, rect.y2);
 
     // removing stored shapes
-    this.canvasState.circles = [];
-    this.canvasState.lines = [];
-    this.canvasState.rectangles = [];
-
-    this.canvasState.rectangles.push(rect);
+    this.canvasState.shapes = [];
+    this.canvasState.shapes.push(rect);
   }
 
   /**
@@ -484,15 +347,8 @@ export class CanvasComponent {
       this.canvasState.toolsState.find((tState) => tState.name === name);
 
     if (selectedToolState) {
-      this.selectedTool = selectedToolState;
+      this.canvasState.selectedTool = selectedToolState;
       this.setToolPropertiesContext();
-    }
-
-    // enabling/disabling color input
-    if (['paintbrush', 'circle'].includes(name)) {
-      this.color.enable();
-    } else {
-      this.color.disable();
     }
   }
 
@@ -506,7 +362,7 @@ export class CanvasComponent {
     );
 
     this.canvasState.toolsState[indexToolState] = tool;
-    this.selectedTool = tool;
+    this.canvasState.selectedTool = tool;
     this.setToolPropertiesContext();
   }
 
@@ -514,13 +370,17 @@ export class CanvasComponent {
    * Set the properties of the selected tool in the canvas context.
    */
   private setToolPropertiesContext() {
-    if (this.selectedTool.name === 'eraser') {
+    if (this.canvasState.selectedTool.name === 'eraser') {
       this.context.strokeStyle = this.backgroundColor;
     }
-    if (['paintbrush', 'circle'].includes(this.selectedTool.name)) {
-      this.context.strokeStyle = this.color.value;
+    if (
+      ['paintbrush', 'circle', 'rect'].includes(
+        this.canvasState.selectedTool.name
+      )
+    ) {
+      this.context.strokeStyle = this.canvasState.color;
     }
-    this.context.lineWidth = this.selectedTool.lineWidth;
+    this.context.lineWidth = this.canvasState.selectedTool.lineWidth;
     this.context.lineJoin = 'round';
   }
 
@@ -531,7 +391,7 @@ export class CanvasComponent {
   onRightClick(e: MouseEvent) {
     e.preventDefault();
     const dialogRef = this.dialog.open(ModalToolPropertiesComponent, {
-      data: this.selectedTool,
+      data: this.canvasState.selectedTool,
       width: '300px',
       height: '250px',
     });
@@ -622,38 +482,64 @@ export class CanvasComponent {
    * Restores the canvas state stored in the memento.
    */
   private restoreState(memento: Memento) {
+    const selectedTool = this.canvasState.selectedTool;
     this.canvasState = memento.getState();
+    // do not change selected tool with ctrl+z
+    if (this.canvasState.selectedTool.name !== selectedTool.name)
+      this.canvasState.selectedTool = selectedTool;
 
     switch (this.latestOperation) {
       case 'drawing':
-        this.clearContentOnStageRestore();
-        // redrawing content
-        this.canvasState.circles.forEach((circle: BezierCurveCircle) => {
-          this.redrawCircleOnStageRestore(circle);
-        });
-
-        this.canvasState.lines.forEach((line: Line) => {
-          this.redrawLineOnStageRestore(line);
-        });
-
-        this.canvasState.rectangles.forEach((rect: Rectangle) => {
-          this.redrawRectangleOnStageRestore(rect);
-        });
-
+        this.redrawContent(this.canvasState.shapes);
         break;
 
       case 'globalPropertiesChanged':
-        this.color.setValue(this.canvasState.color);
         this.context.strokeStyle = this.canvasState.color;
         break;
 
       case 'toolPropertiesChanged':
         const toolState = this.canvasState.toolsState.find(
-          (ts) => ts.name === this.selectedTool.name
+          (ts) => ts.name === this.canvasState.selectedTool.name
         );
         this.updateSelectedToolState(toolState!);
         break;
     }
     this.latestOperation = memento.getLatestOperation();
+  }
+
+  /**
+   * Method to redraw all the content
+   * @param shapes
+   */
+  private redrawContent(shapes: Shape[]) {
+    this.clearContentOnStageRestore();
+
+    shapes.forEach((shape) => {
+      let sInstance;
+
+      switch (shape.type) {
+        case 'line':
+          const l = <Line>shape;
+          sInstance = new Line(shape.color, shape.lineWidth, l.points);
+          break;
+
+        case 'circ':
+          const c = <Circle>shape;
+          sInstance = Circle.createFromAnotherInstance(c);
+          break;
+
+        case 'rect':
+          const r = <Rectangle>shape;
+          sInstance = new Rectangle(
+            shape.color,
+            shape.lineWidth,
+            { x: r.x1, y: r.y1 },
+            { x: r.x2, y: r.y2 }
+          );
+          break;
+      }
+
+      if (sInstance) sInstance.draw(this.context);
+    });
   }
 }

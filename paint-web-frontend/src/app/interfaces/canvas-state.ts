@@ -1,19 +1,35 @@
 import { CanvasTool } from './canvas-tool.interface';
-import { BezierCurveCircle } from './shapes/bezier-curve-circle.interface';
-import { Line } from './shapes/line.interface';
-import { Rectangle } from './shapes/rectangle.interface';
+import { Shape } from '../canvas/shapes/shape';
 
 export interface CanvasState {
+  /**
+   * Latest operation executed on the canvas.
+   */
   latestOperation: string;
   // latestOperation: 'drawing' | 'globalPropertiesChanged';
 
+  /**
+   * Canvas context color.
+   */
   color: string;
 
+  /**
+   * Canvas tools state.
+   */
   toolsState: CanvasTool[];
 
-  lines: Line[];
+  /**
+   * Shapes drawn on the canvas.
+   */
+  shapes: Shape[];
 
-  circles: BezierCurveCircle[];
+  /**
+   * Flag to determine if changes on canvas are allowed.
+   */
+  disabled: boolean;
 
-  rectangles: Rectangle[];
+  /**
+   * Selected tool.
+   */
+  selectedTool: CanvasTool;
 }

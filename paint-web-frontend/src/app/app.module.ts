@@ -14,9 +14,19 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCardModule } from '@angular/material/card';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CaretakerService } from './state-management/caretaker.service';
+import { ToolbarComponent } from './canvas/toolbar/toolbar.component';
+import { DragDropModule } from '@angular/cdk/drag-drop';
+import { MultiToolButtonComponent } from './canvas/toolbar/multi-tool-button/multi-tool-button.component';
+import { OverlayModule } from '@angular/cdk/overlay';
 
 @NgModule({
-  declarations: [AppComponent, CanvasComponent, ModalToolPropertiesComponent],
+  declarations: [
+    AppComponent,
+    CanvasComponent,
+    ModalToolPropertiesComponent,
+    ToolbarComponent,
+    MultiToolButtonComponent,
+  ],
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
@@ -28,6 +38,8 @@ import { CaretakerService } from './state-management/caretaker.service';
     MatFormFieldModule,
     MatCardModule,
     ReactiveFormsModule,
+    DragDropModule,
+    OverlayModule,
   ],
   providers: [CaretakerService],
   bootstrap: [AppComponent],

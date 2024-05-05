@@ -1,0 +1,52 @@
+<div id="top-panel">
+  <div
+    id="toolbar"
+    cdkDropList
+    cdkDropListOrientation="horizontal"
+    (cdkDropListDropped)="drop($event)"
+  >
+    <!-- Tools -->
+    <ng-container *ngFor="let t of tools">
+      <app-multi-tool-button
+        *ngIf="t.multiTool"
+        [tool]="t"
+        cdkDrag
+        [ngClass]="{ 'tool-selected': shouldApplySelectedStyle(t) }"
+      >
+      </app-multi-tool-button>
+
+      <button
+        *ngIf="!t.multiTool"
+        mat-button
+        (click)="t.onclickFunction ? t.onclickFunction(t.name) : null"
+        [ngClass]="{ 'tool-selected': shouldApplySelectedStyle(t) }"
+        cdkDrag
+      >
+        <mat-icon fontIcon="{{ t.iconName }}"></mat-icon>
+      </button>
+    </ng-container>
+  </div>
+
+  <!--  Global properties -->
+  <div id="global-properties">
+    <div class="property-button">
+      <label for="color-picker-input">
+        <mat-icon
+          [ngStyle]="{ color: canvasState.color }"
+          fontIcon="palette icon"
+        ></mat-icon>
+      </label>
+
+      <input
+        id="color-picker-input"
+        type="color"
+        placeholder="color"
+        value="#000"
+        (change)="onColorChange($event)"
+        (focus)="this.canvasState.disabled = true"
+        (blur)="this.canvasState.disabled = false"
+        [disabled]="this.canvasState.selectedTool.name === 'eraser'"
+      />
+    </div>
+  </div>
+</div>
