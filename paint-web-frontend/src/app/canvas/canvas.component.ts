@@ -373,7 +373,11 @@ export class CanvasComponent {
     if (this.canvasState.selectedTool.name === 'eraser') {
       this.context.strokeStyle = this.backgroundColor;
     }
-    if (['paintbrush', 'circle', 'rect'].includes(this.canvasState.selectedTool.name)) {
+    if (
+      ['paintbrush', 'circle', 'rect'].includes(
+        this.canvasState.selectedTool.name
+      )
+    ) {
       this.context.strokeStyle = this.canvasState.color;
     }
     this.context.lineWidth = this.canvasState.selectedTool.lineWidth;
@@ -478,7 +482,11 @@ export class CanvasComponent {
    * Restores the canvas state stored in the memento.
    */
   private restoreState(memento: Memento) {
+    const selectedTool = this.canvasState.selectedTool;
     this.canvasState = memento.getState();
+    // do not change selected tool with ctrl+z
+    if (this.canvasState.selectedTool.name !== selectedTool.name)
+      this.canvasState.selectedTool = selectedTool;
 
     switch (this.latestOperation) {
       case 'drawing':

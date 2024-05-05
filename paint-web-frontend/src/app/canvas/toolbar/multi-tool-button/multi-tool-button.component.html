@@ -4,7 +4,11 @@
     (contextmenu)="openOptionsList($event)"
     cdkOverlayOrigin
     #trigger="cdkOverlayOrigin"
-    (click)="this.selectedOption.onclickFunction(selectedOption.name)"
+    (click)="
+      this.selectedOption.onclickFunction
+        ? this.selectedOption.onclickFunction(selectedOption.name)
+        : null
+    "
   >
     <mat-icon fontIcon="{{ selectedOption.iconName }}"></mat-icon>
   </button>
@@ -21,7 +25,9 @@
         mat-menu-item
         (click)="
           selectedOption = op;
-          this.selectedOption.onclickFunction(selectedOption.name);
+          this.selectedOption.onclickFunction
+            ? this.selectedOption.onclickFunction(selectedOption.name)
+            : null;
           isOpen = !this.isOpen
         "
       >

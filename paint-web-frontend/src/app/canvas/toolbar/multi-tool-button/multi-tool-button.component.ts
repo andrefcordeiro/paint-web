@@ -18,7 +18,7 @@ export class MultiToolButtonComponent implements OnInit {
   /**
    * Selected button option.
    */
-  selectedOption: any;
+  selectedOption: ToolButton | null;
 
   /**
    * Flag that determines whether the button options should be displayed or not.
