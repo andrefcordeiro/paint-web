@@ -18,49 +18,42 @@ mat-icon {
   justify-content: center;
   padding: 10px;
   height: 40px;
+  
+  button {
+    height: 100%;
+  }
+  
+  button:hover {
+    filter: invert(1);
+    transform: scale(1.1);
+  }
 }
 
-button {
-  height: 100%;
-}
-
-button:hover {
-  filter: invert(1);
-  transform: scale(1.1);
-}
 
 .tool-selected {
   filter: invert(1);
 }
 
-#global-properties {
+.property-button {
   display: flex;
-  flex: 1;
-  padding: 10px;
-  height: 40px;
-
-  .property-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-  }
-
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  
   label {
-    background-color: blue;
     display: flex;
     align-items: center;
     height: 100%;
   }
-
+  
   label:hover {
     cursor: pointer;
   }
-
+  
   mat-icon {
     background-color: rgb(221, 221, 221);
   }
-
+  
   #color-picker-input {
     width: 0ch;
   }
