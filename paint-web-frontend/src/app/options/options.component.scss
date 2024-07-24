@@ -1,0 +1,22 @@
+#options {
+  display: flex;
+  position: absolute;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 10px;
+  background-color: black;
+  width: 100vw;
+
+  mat-icon {
+    color: white;
+    transform: scale(2);
+  }
+}
+
+.overlay-container {
+  background-color: white;
+  width: 300px;
+  height: 50vh;
+  text-align: center;
+  padding: 10px;
+}

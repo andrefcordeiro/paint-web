@@ -18,6 +18,7 @@ import { ToolbarComponent } from './canvas/toolbar/toolbar.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { MultiToolButtonComponent } from './canvas/toolbar/multi-tool-button/multi-tool-button.component';
 import { OverlayModule } from '@angular/cdk/overlay';
+import { OptionsComponent } from './options/options.component';
 
 @NgModule({
   declarations: [
@@ -26,6 +27,7 @@ import { OverlayModule } from '@angular/cdk/overlay';
     ModalToolPropertiesComponent,
     ToolbarComponent,
     MultiToolButtonComponent,
+    OptionsComponent,
   ],
   imports: [
     BrowserModule,

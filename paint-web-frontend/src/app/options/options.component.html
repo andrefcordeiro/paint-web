@@ -1,0 +1,20 @@
+<div id="options">
+  <div class="property-button">
+    <button mat-button cdkOverlayOrigin #trigger="cdkOverlayOrigin"
+      (click)="helpOverlayOpened = !helpOverlayOpened">
+    <mat-icon
+        fontIcon="help icon"
+    ></mat-icon>
+    </button>
+  </div>
+  
+  <ng-template
+    cdkConnectedOverlay
+    [cdkConnectedOverlayOrigin]="trigger"
+    [cdkConnectedOverlayOpen]="helpOverlayOpened"
+    >
+    <mat-card class="overlay-container">
+      Lorem, ipsum dolor sit amet consectetur adipisicing elit. Saepe fugit quia sapiente maiores veniam voluptate voluptatem doloremque laborum provident accusamus laudantium aut quaerat explicabo, consequuntur tempora quod. Maxime, nemo nihil?
+    </mat-card>
+  </ng-template>
+</div>
