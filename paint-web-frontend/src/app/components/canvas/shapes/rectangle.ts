@@ -1,4 +1,4 @@
-import { Point } from '../../interfaces/shapes/point.interface';
+import { Point } from '../../../interfaces/shapes/point.interface';
 import { Shape } from './shape';
 
 export class Rectangle extends Shape {

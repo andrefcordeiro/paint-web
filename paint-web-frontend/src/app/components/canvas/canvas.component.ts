@@ -1,17 +1,17 @@
 import { Component, ElementRef, HostListener, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ModalToolPropertiesComponent } from './modal-tool-properties/modal-tool-properties.component';
-import { CanvasTool } from '../interfaces/canvas-tool.interface';
-import { CanvasMemento } from '../interfaces/canvas-memento';
-import { CaretakerService } from '../state-management/caretaker.service';
-import { CanvasState } from '../interfaces/canvas-state';
-import { Point } from '../interfaces/shapes/point.interface';
+import { CanvasTool } from '../../interfaces/canvas-tool.interface';
+import { CanvasMemento } from '../../interfaces/canvas-memento';
+import { CaretakerService } from '../../services/state-management/caretaker.service';
+import { CanvasState } from '../../interfaces/canvas-state';
+import { Point } from '../../interfaces/shapes/point.interface';
 import { Circle } from './shapes/circle';
 import { Rectangle } from './shapes/rectangle';
-import { Memento } from '../state-management/memento.interface';
+import { Memento } from '../../services/state-management/memento.interface';
 import { Line } from './shapes/line';
 import { Shape } from './shapes/shape';
-import { ToolButton } from '../interfaces/tool-button.interface';
+import { ToolButton } from '../../interfaces/tool-button.interface';
 
 @Component({
   selector: 'app-canvas',
