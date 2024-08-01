@@ -1,5 +1,5 @@
 <div id="options">
-  <div class="property-button">
+  <div>
     <button mat-button cdkOverlayOrigin #trigger="cdkOverlayOrigin"
       (click)="helpOverlayOpened = !helpOverlayOpened">
     <mat-icon
@@ -12,9 +12,25 @@
     cdkConnectedOverlay
     [cdkConnectedOverlayOrigin]="trigger"
     [cdkConnectedOverlayOpen]="helpOverlayOpened"
+    [cdkConnectedOverlayHasBackdrop]="true"
+    (backdropClick)="helpOverlayOpened = false"
     >
-    <mat-card class="overlay-container">
-      Lorem, ipsum dolor sit amet consectetur adipisicing elit. Saepe fugit quia sapiente maiores veniam voluptate voluptatem doloremque laborum provident accusamus laudantium aut quaerat explicabo, consequuntur tempora quod. Maxime, nemo nihil?
+    <mat-card class="overlay-container" style="display: flex; flex-direction: column; text-align: start; padding: 20px;">
+      <h1>Help</h1>
+      <mat-list id="help-list">
+        <mat-list-item>
+          <span matListItemTitle><mat-icon>mouse icon</mat-icon>Change line width</span>
+          <span matListItemLine>Right click</span>
+        </mat-list-item>
+        <mat-list-item>
+          <span matListItemTitle><mat-icon>undo</mat-icon>Undo</span>
+          <span matListItemLine>Ctrl+Z</span>
+        </mat-list-item>
+        <mat-list-item>
+          <span matListItemTitle><mat-icon>redo</mat-icon>Redo</span>
+          <span matListItemLine>Ctrl+Shift+Z</span>
+        </mat-list-item>
+      </mat-list>
     </mat-card>
   </ng-template>
 </div>

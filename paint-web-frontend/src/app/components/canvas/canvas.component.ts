@@ -165,8 +165,8 @@ export class CanvasComponent {
    * Function to initialize canvas properties.
    */
   private createCanvas() {
-    // this.canvasElement.style.width = '100vw';
-    // this.canvasElement.style.height = '90vh';
+    this.canvasElement.style.width = '100vw';
+    // this.canvasElement.style.height = '100';
 
     this.canvasElement.width = this.canvasElement.offsetWidth;
     this.canvasElement.height = this.canvasElement.offsetHeight;
