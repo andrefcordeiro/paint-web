@@ -19,6 +19,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 import { MultiToolButtonComponent } from './components/canvas/toolbar/multi-tool-button/multi-tool-button.component';
 import { OverlayModule } from '@angular/cdk/overlay';
 import { OptionsComponent } from './components/options/options.component';
+import {MatListModule} from '@angular/material/list';
 
 @NgModule({
   declarations: [
@@ -42,6 +43,7 @@ import { OptionsComponent } from './components/options/options.component';
     ReactiveFormsModule,
     DragDropModule,
     OverlayModule,
+    MatListModule,
   ],
   providers: [CaretakerService],
   bootstrap: [AppComponent],

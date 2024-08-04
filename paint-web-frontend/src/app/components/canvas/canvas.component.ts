@@ -13,6 +13,13 @@ import { Line } from './shapes/line';
 import { Shape } from './shapes/shape';
 import { ToolButton } from '../../interfaces/tool-button.interface';
 
+interface ZoomInfo {
+  scale: number, 
+  SCROLL_SENSITIVITY: number, 
+  MAX_ZOOM: number, 
+  MIN_ZOOM: number
+}
+
 @Component({
   selector: 'app-canvas',
   templateUrl: './canvas.component.html',
@@ -101,6 +108,11 @@ export class CanvasComponent {
    * Current shape being drawn on the canvas.
    */
   shape: Shape | null;
+
+  /**
+   * Information about the zoom of the canvas.
+   */
+  zoomInfo: ZoomInfo = { scale: 1.0, SCROLL_SENSITIVITY: 0.0005, MAX_ZOOM: 5, MIN_ZOOM: 0.1 };
 
   /**
    * Returns the nativeElement of the canvas.
@@ -541,5 +553,27 @@ export class CanvasComponent {
 
       if (sInstance) sInstance.draw(this.context);
     });
+  }
+
+  /**
+   * Method to handle the mouse wheel event to control canvas zoom.
+   * @param e Mouse event.
+  */
+  @HostListener('window:wheel', ['$event'])
+  private onMouseWheel(e: any) {
+    const zoomAmount = e.deltaY * this.zoomInfo.SCROLL_SENSITIVITY;
+    
+    this.zoomInfo.scale -= zoomAmount;
+    
+    this.zoomInfo.scale = Math.min(this.zoomInfo.scale, this.zoomInfo.MAX_ZOOM)
+    this.zoomInfo.scale = Math.max(this.zoomInfo.scale, this.zoomInfo.MIN_ZOOM)
+    
+    this.context.save();
+    this.context.scale(this.zoomInfo.scale, this.zoomInfo.scale);
+    
+    const currentShapes = this.canvasState.shapes;
+    this.redrawContent(currentShapes);
+
+    this.context.restore();
   }
 }
