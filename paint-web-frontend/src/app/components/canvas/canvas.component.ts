@@ -13,12 +13,6 @@ import { Line } from './shapes/line';
 import { Shape } from './shapes/shape';
 import { ToolButton } from '../../interfaces/tool-button.interface';
 
-interface ZoomInfo {
-  scale: number, 
-  SCROLL_SENSITIVITY: number, 
-  MAX_ZOOM: number, 
-  MIN_ZOOM: number
-}
 
 @Component({
   selector: 'app-canvas',
@@ -110,9 +104,19 @@ export class CanvasComponent {
   shape: Shape | null;
 
   /**
-   * Information about the zoom of the canvas.
+   * The distance between the top-left (0,0) canvas coordinates and the top-left of the viewport.
    */
-  zoomInfo: ZoomInfo = { scale: 1.0, SCROLL_SENSITIVITY: 0.0005, MAX_ZOOM: 5, MIN_ZOOM: 0.1 };
+  panOffSet = { x: 0, y: 0 };
+
+  /**
+  * Flag that indicates whether the middle mouse button is being pressed.
+  */
+  panning = false;
+
+  /**
+   * Start position of the panning.
+   */
+  startPanMousePosition = { x: 0, y: 0 };
 
   /**
    * Returns the nativeElement of the canvas.
@@ -129,7 +133,7 @@ export class CanvasComponent {
   constructor(
     public dialog: MatDialog,
     private caretakerService: CaretakerService
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.initializeCanvasToolsState();
@@ -177,11 +181,8 @@ export class CanvasComponent {
    * Function to initialize canvas properties.
    */
   private createCanvas() {
-    this.canvasElement.style.width = '100vw';
-    // this.canvasElement.style.height = '100';
-
-    this.canvasElement.width = this.canvasElement.offsetWidth;
-    this.canvasElement.height = this.canvasElement.offsetHeight;
+    this.canvasElement.width = window.innerWidth;
+    this.canvasElement.height = window.innerHeight;
 
     this.context = this.canvasElement.getContext('2d')!;
     this.setToolPropertiesContext();
@@ -195,8 +196,8 @@ export class CanvasComponent {
    */
   private getMouseCoordMinusOffset(x: number, y: number): Point {
     return {
-      x: x - this.canvasElement.offsetLeft,
-      y: y - this.canvasElement.offsetTop,
+      x: x - this.panOffSet.x,
+      y: y - this.panOffSet.y
     };
   }
 
@@ -204,10 +205,17 @@ export class CanvasComponent {
    * Mouse events.
    */
   onMouseDown(e: MouseEvent) {
+    const clientXY = this.getMouseCoordMinusOffset(e.clientX, e.clientY);
+
+    if (e.button === 1) { // middle button
+      this.panning = true;
+      this.startPanMousePosition = clientXY;
+      return;
+    }
+
     if (e.button !== 0 || this.canvasState.disabled) return;
 
     this.mouseDown = true;
-    const p = this.getMouseCoordMinusOffset(e.clientX, e.clientY);
 
     switch (this.canvasState.selectedTool.name) {
       case 'paintbrush':
@@ -221,7 +229,7 @@ export class CanvasComponent {
       case 'circle':
       case 'rect':
         this.saveState('drawing');
-        this.start = p;
+        this.start = clientXY;
         break;
     }
   }
@@ -231,24 +239,44 @@ export class CanvasComponent {
     this.shape = null;
 
     this.mouseDown = false;
+    this.panning = false;
     this.context.closePath();
   }
 
   onMouseMove(e: MouseEvent) {
+    const clientXY = this.getMouseCoordMinusOffset(e.clientX, e.clientY);
+
+    if (this.panning) {
+      const deltaX = clientXY.x - this.startPanMousePosition.x;
+      const deltaY = clientXY.y - this.startPanMousePosition.y;
+      this.panOffSet = { x: this.panOffSet.x + deltaX, y: this.panOffSet.y + deltaY };
+
+      this.clearContentOnStageRestore();
+
+      this.context.save();
+      this.context.translate(this.panOffSet.x, this.panOffSet.y)
+
+      console.log('redrawing')
+      this.redrawContent(this.canvasState.shapes);
+
+      this.context.restore();
+
+      return;
+    }
+
     if (this.mouseDown) {
-      const p = this.getMouseCoordMinusOffset(e.clientX, e.clientY);
 
       switch (this.canvasState.selectedTool.name) {
         case 'paintbrush':
         case 'eraser':
-          this.drawLine(p.x, p.y);
+          this.drawLine(clientXY.x, clientXY.y);
           break;
 
         case 'circle':
           this.shape = new Circle(
             this.canvasState.color,
             this.context.lineWidth,
-            { x: p.x, y: p.y },
+            { x: clientXY.x, y: clientXY.y },
             this.start
           );
           this.drawShape(this.shape);
@@ -259,7 +287,7 @@ export class CanvasComponent {
             this.canvasState.color,
             this.context.lineWidth,
             { x: this.start.x, y: this.start.y },
-            { x: p.x - this.start.x, y: p.y - this.start.y }
+            { x: clientXY.x - this.start.x, y: clientXY.y - this.start.y }
           );
           this.drawShape(this.shape);
           break;
@@ -302,9 +330,12 @@ export class CanvasComponent {
    * @param y Y coordinate.
    */
   private drawLine(x: number, y: number) {
+    this.context.save()
+    this.context.translate(this.panOffSet.x, this.panOffSet.y)
     this.context.lineTo(x, y);
     this.context.stroke();
     (this.shape as Line).pushPoint({ x, y });
+    this.context.restore()
   }
 
   /**
@@ -502,6 +533,7 @@ export class CanvasComponent {
 
     switch (this.latestOperation) {
       case 'drawing':
+        this.clearContentOnStageRestore();
         this.redrawContent(this.canvasState.shapes);
         break;
 
@@ -559,21 +591,39 @@ export class CanvasComponent {
    * Method to handle the mouse wheel event to control canvas zoom.
    * @param e Mouse event.
   */
-  @HostListener('window:wheel', ['$event'])
-  private onMouseWheel(e: any) {
-    const zoomAmount = e.deltaY * this.zoomInfo.SCROLL_SENSITIVITY;
-    
-    this.zoomInfo.scale -= zoomAmount;
-    
-    this.zoomInfo.scale = Math.min(this.zoomInfo.scale, this.zoomInfo.MAX_ZOOM)
-    this.zoomInfo.scale = Math.max(this.zoomInfo.scale, this.zoomInfo.MIN_ZOOM)
-    
-    this.context.save();
-    this.context.scale(this.zoomInfo.scale, this.zoomInfo.scale);
-    
-    const currentShapes = this.canvasState.shapes;
-    this.redrawContent(currentShapes);
+  // @HostListener('window:wheel', ['$event'])
+  // private onMouseWheel(e: any) {
+  //   console.log("🚀 ~ CanvasComponent ~ onMouseWheel ~ e.deltaY:", e.deltaY)
+  //   if (e.deltaY > 0) {
+  //     this.zoomInfo.scale -= this.zoomInfo.SCROLL_SENSITIVITY;
+  //   } else {
+  //     this.zoomInfo.scale += this.zoomInfo.SCROLL_SENSITIVITY;
+  //   }
 
-    this.context.restore();
-  }
+  //   this.zoomInfo.scale = Math.min(this.zoomInfo.scale, this.zoomInfo.MAX_ZOOM)
+  //   this.zoomInfo.scale = Math.max(this.zoomInfo.scale, this.zoomInfo.MIN_ZOOM)
+  //   console.log("🚀 ~ CanvasComponent ~ onMouseWheel ~ this.zoomInfo.scale:", this.zoomInfo.scale)
+
+  //   this.context.save();
+
+  //   this.clearContentOnStageRestore();
+
+  //   // PARA DAR ZOOM NO MEIO DA TELA
+  //   // const scaleWidth = this.canvasElement.width * this.zoomInfo.scale;
+  //   // const scaleHeight = this.canvasElement.height * this.zoomInfo.scale;
+
+  //   // const scaleOffSetX = (scaleWidth - this.canvasElement.width) / 2;
+  //   // const scaleOffSetY = (scaleHeight - this.canvasElement.height) / 2;
+  //   // this.zoomInfo.scaleOffSet = {x: scaleOffSetX, y: scaleOffSetY};
+
+  //   // this.context.translate(this.mousePosition.x * this.zoomInfo.scale, this.mousePosition.y * this.zoomInfo.scale);
+
+  //   this.context.scale(this.zoomInfo.scale, this.zoomInfo.scale);
+
+  //   const currentShapes = this.canvasState.shapes;
+
+  //   this.redrawContent(currentShapes);
+
+  //   this.context.restore();
+  // }
 }
