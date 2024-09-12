@@ -343,17 +343,24 @@ export class CanvasComponent {
    * @param shape Shape.
    */
   private drawShape(shape: Shape) {
-    // restoring canvas state everytime a new circle is drawn
-    this.undoOperation(false);
+    // clearing and redrawing content before a new circle is drawn
+    this.clearContentOnStageRestore();
+
+    this.context.save()
+    this.context.translate(this.panOffSet.x, this.panOffSet.y)
+
+    this.redrawContent(this.canvasState.shapes);
+
     this.saveState('drawing');
 
     shape.draw(this.context);
+    this.context.restore()
   }
 
   /**
    * Clear all page content before redrawing content on state restore.
    */
-  clearContentOnStageRestore() {
+  private clearContentOnStageRestore() {
     this.context.clearRect(
       0,
       0,
