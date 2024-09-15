@@ -13,6 +13,10 @@ import { Line } from './shapes/line';
 import { Shape } from './shapes/shape';
 import { ToolButton } from '../../interfaces/tool-button.interface';
 
+/**
+ * Types of operations on canvas.
+ */
+type CanvasOperation = 'drawing';
 
 @Component({
   selector: 'app-canvas',
@@ -96,7 +100,7 @@ export class CanvasComponent {
   /**
    * Latest operation applied to the canvas.
    */
-  latestOperation = 'drawing';
+  latestOperation: CanvasOperation = 'drawing';
 
   /**
    * Current shape being drawn on the canvas.
@@ -155,7 +159,7 @@ export class CanvasComponent {
     const toolsState = [paintbrush, eraser, circle, rect];
 
     this.canvasState = {
-      latestOperation: 'none',
+      latestOperation: 'drawing',
       color: 'black',
       toolsState: toolsState,
       shapes: [],
@@ -169,8 +173,6 @@ export class CanvasComponent {
    */
   onColorChange(color: string) {
     if (this.canvasState.selectedTool.name !== 'eraser') {
-      this.saveState('globalPropertiesChanged');
-
       this.canvasState.color = color;
       this.context.strokeStyle = color;
       this.context.fillStyle = color;
@@ -221,14 +223,13 @@ export class CanvasComponent {
       case 'paintbrush':
       case 'eraser':
         this.shape = new Line(this.context.strokeStyle, this.context.lineWidth);
-
-        this.saveState('drawing');
+        if (this.latestOperation === 'drawing') this.saveState(this.latestOperation);
         this.context.beginPath();
         break;
 
       case 'circle':
       case 'rect':
-        this.saveState('drawing');
+        if (this.latestOperation === 'drawing') this.saveState(this.latestOperation);
         this.start = clientXY;
         break;
     }
@@ -256,11 +257,9 @@ export class CanvasComponent {
       this.context.save();
       this.context.translate(this.panOffSet.x, this.panOffSet.y)
 
-      console.log('redrawing')
       this.redrawContent(this.canvasState.shapes);
 
       this.context.restore();
-
       return;
     }
 
@@ -312,7 +311,7 @@ export class CanvasComponent {
       if (e.shiftKey) {
         this.redoOperation();
       } else {
-        this.undoOperation(true);
+        this.undoOperation();
       }
     } else if (controlKeys.includes(key)) {
       const keysTools: { [key: string]: string } = {
@@ -351,8 +350,6 @@ export class CanvasComponent {
 
     this.redrawContent(this.canvasState.shapes);
 
-    this.saveState('drawing');
-
     shape.draw(this.context);
     this.context.restore()
   }
@@ -373,8 +370,6 @@ export class CanvasComponent {
    * Clear all page content.
    */
   clearContent() {
-    this.saveState('drawing');
-
     const rect: Rectangle = new Rectangle(
       'white',
       0,
@@ -448,7 +443,6 @@ export class CanvasComponent {
 
     dialogRef.afterClosed().subscribe((data: CanvasTool) => {
       if (data) {
-        this.saveState('toolPropertiesChanged');
         this.updateSelectedToolState(data);
       }
     });
@@ -499,20 +493,15 @@ export class CanvasComponent {
   private saveState(currentOperation: string) {
     const memento = this.createMementoFromState(this.latestOperation);
     this.caretakerService.pushMemento(memento);
-    this.latestOperation = currentOperation;
+    this.latestOperation = currentOperation as CanvasOperation;
   }
 
   /**
    * Method executed when user press ctrl+z to undo the current operation.
    */
-  private undoOperation(saveCurrentState: boolean) {
-    let currentState = null;
-    if (saveCurrentState) {
-      currentState = this.createMementoFromState(this.latestOperation);
-    }
-    const memento = this.caretakerService.popMemento(
-      currentState
-    ) as CanvasMemento;
+  private undoOperation() {
+    const currentState = this.createMementoFromState(this.latestOperation);
+    const memento = this.caretakerService.popMemento(currentState) as CanvasMemento;
 
     if (memento) this.restoreState(memento);
   }
@@ -521,9 +510,10 @@ export class CanvasComponent {
    * Method executed when user press ctrl+shift+z to redo the latest operation.
    */
   private redoOperation() {
-    const memento = this.caretakerService.popPastMemento() as CanvasMemento;
+    const currentState = this.createMementoFromState(this.latestOperation);
+    const memento = this.caretakerService.restoreDeletedMemento(currentState);
+
     if (!memento) return;
-    this.saveState(memento.getLatestOperation());
 
     this.restoreState(memento);
   }
@@ -540,22 +530,11 @@ export class CanvasComponent {
 
     switch (this.latestOperation) {
       case 'drawing':
-        this.clearContentOnStageRestore();
         this.redrawContent(this.canvasState.shapes);
         break;
 
-      case 'globalPropertiesChanged':
-        this.context.strokeStyle = this.canvasState.color;
-        break;
-
-      case 'toolPropertiesChanged':
-        const toolState = this.canvasState.toolsState.find(
-          (ts) => ts.name === this.canvasState.selectedTool.name
-        );
-        this.updateSelectedToolState(toolState!);
-        break;
     }
-    this.latestOperation = memento.getLatestOperation();
+    this.latestOperation = memento.getLatestOperation() as CanvasOperation;
   }
 
   /**
