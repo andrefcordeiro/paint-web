@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, Renderer2, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ModalToolPropertiesComponent } from './modal-tool-properties/modal-tool-properties.component';
 import { CanvasTool } from '../../interfaces/canvas-tool.interface';
@@ -12,6 +12,7 @@ import { Memento } from '../../services/state-management/memento.interface';
 import { Line } from './shapes/line';
 import { Shape } from './shapes/shape';
 import { ToolButton } from '../../interfaces/tool-button.interface';
+import { BehaviorSubject } from 'rxjs';
 
 /**
  * Types of operations on canvas.
@@ -34,22 +35,22 @@ export class CanvasComponent {
   /**
    * Canvas.
    */
-  @ViewChild('canvas', { static: false }) canvas: ElementRef;
+  @ViewChild('canvas', { static: false }) private canvas: ElementRef;
 
   /**
    * Context.
    */
-  context: CanvasRenderingContext2D;
+  private context: CanvasRenderingContext2D;
 
   /**
    * Background color of the canvas.
    */
-  backgroundColor = 'white';
+  private backgroundColor = 'white';
 
   /**
    * Flag that determines whether the left mouse button is being pressed.
    */
-  mouseDown = false;
+  private mouseDown = false;
 
   /**
    * Available tools.
@@ -97,7 +98,7 @@ export class CanvasComponent {
   /**
    * Coordinates to draw circle with bezier curve.
    */
-  start: Point;
+  private start: Point;
 
   /**
    * State of the canvas.
@@ -107,32 +108,37 @@ export class CanvasComponent {
   /**
    * Latest operation applied to the canvas.
    */
-  latestOperation: CanvasOperation = 'drawing';
+  private latestOperation: CanvasOperation = 'drawing';
 
   /**
    * Current shape being drawn on the canvas.
    */
-  shape: Shape | null;
+  private shape: Shape | null;
 
   /**
    * The distance between the top-left (0,0) canvas coordinates and the top-left of the viewport.
    */
-  panOffset = { x: 0, y: 0 };
+  private panOffset = { x: 0, y: 0 };
 
   /**
-  * Flag that indicates whether the middle mouse button is being pressed.
-  */
-  panning = false;
+   * Flag that indicates that the user is performing the panning action.
+   */
+  private panningSubject = new BehaviorSubject<boolean>(false);
+
+  /**
+   * Observable to keep track of changes on the panning flag.
+   */
+  private panningObservable$ = this.panningSubject.asObservable();
 
   /**
    * Start position of the panning.
    */
-  startPanMousePosition = { x: 0, y: 0 };
+  private startPanMousePosition = { x: 0, y: 0 };
 
   /**
    * Information about the zoom of the canvas.
    */
-  zoomInfo: ZoomInfo = {
+  private zoomInfo: ZoomInfo = {
     scale: 1,
     scaleOffSet: { x: 0, y: 0 },
     MAX_ZOOM: 20, MIN_ZOOM: 0.1
@@ -152,7 +158,8 @@ export class CanvasComponent {
    */
   constructor(
     public dialog: MatDialog,
-    private caretakerService: CaretakerService
+    private caretakerService: CaretakerService,
+    private renderer: Renderer2,
   ) { }
 
   ngOnInit() {
@@ -161,6 +168,13 @@ export class CanvasComponent {
 
   ngAfterViewInit() {
     this.createCanvas();
+
+    this.panningObservable$.subscribe((panningFlag) => {
+      if (panningFlag)
+        this.renderer.setStyle(this.canvasElement, 'cursor', 'grab');
+      else
+        this.renderer.setStyle(this.canvasElement, 'cursor', 'url("../../../assets/icons/circle-cursor.cur"), auto');
+    });
   }
 
   /**
@@ -229,7 +243,7 @@ export class CanvasComponent {
 
     this.mouseDown = true;
 
-    if (this.panning) {
+    if (this.panningSubject.value) {
       this.startPanMousePosition = clientXY;
     }
 
@@ -254,14 +268,14 @@ export class CanvasComponent {
     this.shape = null;
 
     this.mouseDown = false;
-    this.panning = false;
+    this.panningSubject.next(false);
     this.context.closePath();
   }
 
   onMouseMove(e: MouseEvent) {
     const clientXY = this.getMouseCoordinates(e.clientX, e.clientY);
 
-    if (this.panning && this.mouseDown) {
+    if (this.panningSubject.value && this.mouseDown) {
       this.handlePanning(clientXY);
       return;
     }
@@ -338,8 +352,8 @@ export class CanvasComponent {
     const key = e.key;
     const controlKeys = ['e', 'b'];
 
-    if (e.code === 'Space' && !this.mouseDown) { // panning
-      this.panning = true;
+    if (e.code === 'Space' && !this.mouseDown && !this.panningSubject.value) { // panning
+      this.panningSubject.next(true);
 
     } else if (e.ctrlKey && (key === 'z' || key === 'Z')) { // undo and redo
       if (e.shiftKey) {
@@ -364,7 +378,7 @@ export class CanvasComponent {
   @HostListener('document:keyup', ['$event'])
   private handleReleaseKeyEvent(e: KeyboardEvent) {
     if (e.code === 'Space') {
-      this.panning = false;
+      this.panningSubject.next(false);
     }
   }
 
