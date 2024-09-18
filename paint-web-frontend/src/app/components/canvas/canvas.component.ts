@@ -225,15 +225,13 @@ export class CanvasComponent {
   onMouseDown(e: MouseEvent) {
     const clientXY = this.getMouseCoordinates(e.clientX, e.clientY);
 
-    if (e.button === 1) { // middle button
-      this.panning = true;
-      this.startPanMousePosition = clientXY;
-      return;
-    }
-
     if (e.button !== 0 || this.canvasState.disabled) return;
 
     this.mouseDown = true;
+
+    if (this.panning) {
+      this.startPanMousePosition = clientXY;
+    }
 
     switch (this.canvasState.selectedTool.name) {
       case 'paintbrush':
@@ -263,7 +261,7 @@ export class CanvasComponent {
   onMouseMove(e: MouseEvent) {
     const clientXY = this.getMouseCoordinates(e.clientX, e.clientY);
 
-    if (this.panning) {
+    if (this.panning && this.mouseDown) {
       this.handlePanning(clientXY);
       return;
     }
@@ -332,27 +330,41 @@ export class CanvasComponent {
   }
 
   /**
-   * Function to handle keyboard event and change selected tool.
-   * @param e Keyboard event.
+   * Function to handle Keydown event.
+   * @param e Keydown event.
    */
-  @HostListener('document:keyup', ['$event'])
-  private handleKeyboardEvent(e: KeyboardEvent) {
+  @HostListener('document:keydown', ['$event'])
+  private handlePressKeyEvent(e: KeyboardEvent) {
     const key = e.key;
     const controlKeys = ['e', 'b'];
 
-    if (e.ctrlKey && (key === 'z' || key === 'Z')) {
+    if (e.code === 'Space' && !this.mouseDown) { // panning
+      this.panning = true;
+
+    } else if (e.ctrlKey && (key === 'z' || key === 'Z')) { // undo and redo
       if (e.shiftKey) {
         this.redoOperation();
       } else {
         this.undoOperation();
       }
-    } else if (controlKeys.includes(key)) {
+    } else if (controlKeys.includes(key)) { // selected tool change
       const keysTools: { [key: string]: string } = {
         e: 'eraser',
         b: 'paintbrush',
       };
 
       this.setSelectedTool(keysTools[key]);
+    }
+  }
+
+  /**
+   * Function to handle Keyup event.
+   * @param e Keyup event.
+   */
+  @HostListener('document:keyup', ['$event'])
+  private handleReleaseKeyEvent(e: KeyboardEvent) {
+    if (e.code === 'Space') {
+      this.panning = false;
     }
   }
 
