@@ -126,11 +126,6 @@ export class CanvasComponent {
   private panningSubject = new BehaviorSubject<boolean>(false);
 
   /**
-   * Observable to keep track of changes on the panning flag.
-   */
-  private panningObservable$ = this.panningSubject.asObservable();
-
-  /**
    * Start position of the panning.
    */
   private startPanMousePosition = { x: 0, y: 0 };
@@ -169,7 +164,7 @@ export class CanvasComponent {
   ngAfterViewInit() {
     this.createCanvas();
 
-    this.panningObservable$.subscribe((panningFlag) => {
+    this.panningSubject.subscribe((panningFlag) => {
       if (panningFlag)
         this.renderer.setStyle(this.canvasElement, 'cursor', 'grab');
       else
@@ -312,6 +307,22 @@ export class CanvasComponent {
   }
 
   /**
+   * Function to adjust the scaled and position on canvas before the drawing.
+   */
+  private adjustScaleAndPosition() {
+    const scaleWidth = this.canvasElement.width * this.zoomInfo.scale;
+    const scaleHeight = this.canvasElement.height * this.zoomInfo.scale;
+    const scaleOffSetX = (scaleWidth - this.canvasElement.width) / 2;
+    const scaleOffSetY = (scaleHeight - this.canvasElement.height) / 2;
+    this.zoomInfo.scaleOffSet = { x: scaleOffSetX, y: scaleOffSetY };
+
+    this.context.translate(this.panOffset.x * this.zoomInfo.scale - scaleOffSetX,
+      this.panOffset.y * this.zoomInfo.scale - scaleOffSetY);
+
+    this.context.scale(this.zoomInfo.scale, this.zoomInfo.scale);
+  }
+
+  /**
   * Function to handle the panning event.
   * @param clientXY Mouse position.
   */
@@ -324,15 +335,7 @@ export class CanvasComponent {
 
     this.context.save();
 
-    const scaleWidth = this.canvasElement.width * this.zoomInfo.scale;
-    const scaleHeight = this.canvasElement.height * this.zoomInfo.scale;
-    const scaleOffSetX = (scaleWidth - this.canvasElement.width) / 2;
-    const scaleOffSetY = (scaleHeight - this.canvasElement.height) / 2;
-
-    this.context.translate(this.panOffset.x * this.zoomInfo.scale - scaleOffSetX,
-      this.panOffset.y * this.zoomInfo.scale - scaleOffSetY);
-
-    this.context.scale(this.zoomInfo.scale, this.zoomInfo.scale);
+    this.adjustScaleAndPosition();
 
     this.redrawContent(this.canvasState.shapes);
 
@@ -390,16 +393,7 @@ export class CanvasComponent {
   private drawLine(x: number, y: number) {
     this.context.save()
 
-    const scaleWidth = this.canvasElement.width * this.zoomInfo.scale;
-    const scaleHeight = this.canvasElement.height * this.zoomInfo.scale;
-    const scaleOffSetX = (scaleWidth - this.canvasElement.width) / 2;
-    const scaleOffSetY = (scaleHeight - this.canvasElement.height) / 2;
-
-    this.context.translate(this.panOffset.x * this.zoomInfo.scale - scaleOffSetX,
-      this.panOffset.y * this.zoomInfo.scale - scaleOffSetY);
-
-    this.context.scale(this.zoomInfo.scale, this.zoomInfo.scale);
-
+    this.adjustScaleAndPosition();
 
     this.context.lineTo(x, y);
     this.context.stroke();
@@ -415,17 +409,9 @@ export class CanvasComponent {
     // clearing and redrawing content before a new circle is drawn
     this.clearContentOnStageRestore();
 
-    const scaleWidth = this.canvasElement.width * this.zoomInfo.scale;
-    const scaleHeight = this.canvasElement.height * this.zoomInfo.scale;
-
-    const scaleOffSetX = (scaleWidth - this.canvasElement.width) / 2;
-    const scaleOffSetY = (scaleHeight - this.canvasElement.height) / 2;
-    this.zoomInfo.scaleOffSet = { x: scaleOffSetX, y: scaleOffSetY };
-
     this.context.save();
-    this.context.translate(this.panOffset.x * this.zoomInfo.scale - scaleOffSetX,
-      this.panOffset.y * this.zoomInfo.scale - scaleOffSetY);
-    this.context.scale(this.zoomInfo.scale, this.zoomInfo.scale);
+
+    this.adjustScaleAndPosition();
 
     this.redrawContent(this.canvasState.shapes);
 
@@ -609,9 +595,15 @@ export class CanvasComponent {
 
     switch (this.latestOperation) {
       case 'drawing':
-        this.redrawContent(this.canvasState.shapes);
-        break;
+        this.clearContentOnStageRestore();
 
+        this.context.save();
+
+        this.adjustScaleAndPosition();
+
+        this.redrawContent(this.canvasState.shapes);
+        this.context.restore();
+        break;
     }
     this.latestOperation = memento.getLatestOperation() as CanvasOperation;
   }
@@ -669,23 +661,11 @@ export class CanvasComponent {
 
     this.clearContentOnStageRestore();
 
-    // PARA DAR ZOOM NO MEIO DA TELA
-    const scaleWidth = this.canvasElement.width * this.zoomInfo.scale;
-    const scaleHeight = this.canvasElement.height * this.zoomInfo.scale;
-
-    const scaleOffSetX = (scaleWidth - this.canvasElement.width) / 2;
-    const scaleOffSetY = (scaleHeight - this.canvasElement.height) / 2;
-    this.zoomInfo.scaleOffSet = { x: scaleOffSetX, y: scaleOffSetY };
-
     this.context.save();
-    this.context.translate(this.panOffset.x * this.zoomInfo.scale - scaleOffSetX,
-      this.panOffset.y * this.zoomInfo.scale - scaleOffSetY);
-    this.context.scale(this.zoomInfo.scale, this.zoomInfo.scale);
 
-    const currentShapes = this.canvasState.shapes;
+    this.adjustScaleAndPosition();
 
-    this.redrawContent(currentShapes);
-
+    this.redrawContent(this.canvasState.shapes);
     this.context.restore();
   }
 }
