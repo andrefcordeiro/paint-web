@@ -29,7 +29,7 @@ export class CaretakerService {
   popMemento(currentState: Memento | null): Memento | undefined {
     const m = this.mementos.pop();
 
-    if (currentState) this.pastMementos.push(currentState);
+    if (currentState && m) this.pastMementos.push(currentState);
 
     this.printMementos('popMemento');
 
