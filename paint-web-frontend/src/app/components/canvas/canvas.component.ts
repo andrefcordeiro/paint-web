@@ -19,6 +19,8 @@ import { BehaviorSubject } from 'rxjs';
  */
 type CanvasOperation = 'drawing';
 
+type DrawOperation = 'drawLine' | 'drawShape' | 'redrawContent';
+
 interface ZoomInfo {
   scale: number,
   scaleOffSet: Point,
@@ -140,6 +142,11 @@ export class CanvasComponent {
   };
 
   /**
+   * Subject to control the next drawing operation on canvas.
+   */
+  private drawingOperationSubject = new BehaviorSubject<DrawOperation | ''>('');
+
+  /**
    * Returns the nativeElement of the canvas.
    */
   get canvasElement(): HTMLCanvasElement {
@@ -170,6 +177,59 @@ export class CanvasComponent {
       else
         this.renderer.setStyle(this.canvasElement, 'cursor', 'url("../../../assets/icons/circle-cursor.cur"), auto');
     });
+
+    this.createDrawingOperationSubject();
+  }
+
+  /**
+   * Function to adjust the scaled and position on canvas before the drawing.
+   */
+  private adjustScaleAndPosition() {
+    const scaleWidth = this.canvasElement.width * this.zoomInfo.scale;
+    const scaleHeight = this.canvasElement.height * this.zoomInfo.scale;
+    const scaleOffSetX = (scaleWidth - this.canvasElement.width) / 2;
+    const scaleOffSetY = (scaleHeight - this.canvasElement.height) / 2;
+    this.zoomInfo.scaleOffSet = { x: scaleOffSetX, y: scaleOffSetY };
+
+    this.context.translate(this.panOffset.x * this.zoomInfo.scale - scaleOffSetX,
+      this.panOffset.y * this.zoomInfo.scale - scaleOffSetY);
+
+    this.context.scale(this.zoomInfo.scale, this.zoomInfo.scale);
+  }
+
+  /**
+   * Function to create the drawing operation subscription to draw the content on canvas.
+   */
+  private createDrawingOperationSubject() {
+    this.drawingOperationSubject.subscribe((drawOperation) => {
+      this.context.save();
+
+      switch (drawOperation) {
+        case 'drawLine':
+          this.adjustScaleAndPosition();
+          const lastPoint = (this.shape as Line).points.at(-1);
+          if (lastPoint) {
+            this.context.lineTo(lastPoint.x, lastPoint.y);
+            this.context.stroke();
+          }
+          break;
+        case 'drawShape':
+          this.clearContentOnStageRestore();
+          this.adjustScaleAndPosition();
+          this.redrawContent(this.canvasState.shapes);
+          this.shape?.draw(this.context);
+          break;
+        case 'redrawContent':
+          this.clearContentOnStageRestore();
+          this.adjustScaleAndPosition();
+          this.redrawContent(this.canvasState.shapes);
+          break;
+
+        default:
+          break;
+      }
+      this.context.restore()
+    })
   }
 
   /**
@@ -280,7 +340,8 @@ export class CanvasComponent {
       switch (this.canvasState.selectedTool.name) {
         case 'paintbrush':
         case 'eraser':
-          this.drawLine(clientXY.x, clientXY.y);
+          (this.shape as Line).pushPoint({ x: clientXY.x, y: clientXY.y });
+          this.drawingOperationSubject.next("drawLine");
           break;
 
         case 'circle':
@@ -290,7 +351,7 @@ export class CanvasComponent {
             { x: clientXY.x, y: clientXY.y },
             this.start
           );
-          this.drawShape(this.shape);
+          this.drawingOperationSubject.next("drawShape");
           break;
 
         case 'rect':
@@ -300,26 +361,10 @@ export class CanvasComponent {
             { x: this.start.x, y: this.start.y },
             { x: clientXY.x - this.start.x, y: clientXY.y - this.start.y }
           );
-          this.drawShape(this.shape);
+          this.drawingOperationSubject.next("drawShape");
           break;
       }
     }
-  }
-
-  /**
-   * Function to adjust the scaled and position on canvas before the drawing.
-   */
-  private adjustScaleAndPosition() {
-    const scaleWidth = this.canvasElement.width * this.zoomInfo.scale;
-    const scaleHeight = this.canvasElement.height * this.zoomInfo.scale;
-    const scaleOffSetX = (scaleWidth - this.canvasElement.width) / 2;
-    const scaleOffSetY = (scaleHeight - this.canvasElement.height) / 2;
-    this.zoomInfo.scaleOffSet = { x: scaleOffSetX, y: scaleOffSetY };
-
-    this.context.translate(this.panOffset.x * this.zoomInfo.scale - scaleOffSetX,
-      this.panOffset.y * this.zoomInfo.scale - scaleOffSetY);
-
-    this.context.scale(this.zoomInfo.scale, this.zoomInfo.scale);
   }
 
   /**
@@ -331,15 +376,7 @@ export class CanvasComponent {
     const deltaY = clientXY.y - this.startPanMousePosition.y;
     this.panOffset = { x: this.panOffset.x + deltaX, y: this.panOffset.y + deltaY };
 
-    this.clearContentOnStageRestore();
-
-    this.context.save();
-
-    this.adjustScaleAndPosition();
-
-    this.redrawContent(this.canvasState.shapes);
-
-    this.context.restore();
+    this.drawingOperationSubject.next('redrawContent');
   }
 
   onMouseOut() {
@@ -383,40 +420,6 @@ export class CanvasComponent {
     if (e.code === 'Space') {
       this.panningSubject.next(false);
     }
-  }
-
-  /**
-   * Draw on the canvas.
-   * @param x X coordinate.
-   * @param y Y coordinate.
-   */
-  private drawLine(x: number, y: number) {
-    this.context.save()
-
-    this.adjustScaleAndPosition();
-
-    this.context.lineTo(x, y);
-    this.context.stroke();
-    (this.shape as Line).pushPoint({ x, y });
-    this.context.restore()
-  }
-
-  /**
-   * Draw shape on the canvas.
-   * @param shape Shape.
-   */
-  private drawShape(shape: Shape) {
-    // clearing and redrawing content before a new circle is drawn
-    this.clearContentOnStageRestore();
-
-    this.context.save();
-
-    this.adjustScaleAndPosition();
-
-    this.redrawContent(this.canvasState.shapes);
-
-    shape.draw(this.context);
-    this.context.restore()
   }
 
   /**
@@ -595,14 +598,7 @@ export class CanvasComponent {
 
     switch (this.latestOperation) {
       case 'drawing':
-        this.clearContentOnStageRestore();
-
-        this.context.save();
-
-        this.adjustScaleAndPosition();
-
-        this.redrawContent(this.canvasState.shapes);
-        this.context.restore();
+        this.drawingOperationSubject.next('redrawContent');
         break;
     }
     this.latestOperation = memento.getLatestOperation() as CanvasOperation;
@@ -659,13 +655,6 @@ export class CanvasComponent {
     this.zoomInfo.scale = Math.max(this.zoomInfo.scale, this.zoomInfo.MIN_ZOOM)
     this.zoomInfo.scale = Math.min(this.zoomInfo.scale, this.zoomInfo.MAX_ZOOM)
 
-    this.clearContentOnStageRestore();
-
-    this.context.save();
-
-    this.adjustScaleAndPosition();
-
-    this.redrawContent(this.canvasState.shapes);
-    this.context.restore();
+    this.drawingOperationSubject.next('redrawContent');
   }
 }
