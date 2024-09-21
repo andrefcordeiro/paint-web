@@ -1,10 +1,3 @@
-<app-toolbar
-  [tools]="tools"
-  [canvasState]="canvasState"
-  (colorChange)="onColorChange($event)"
->
-</app-toolbar>
-
 <!-- Canvas -->
 <div id="container-canvas">
   <canvas
@@ -15,5 +8,14 @@
     (mouseup)="onMouseUp($event)"
     (mouseout)="onMouseOut()"
     (contextmenu)="onRightClick($event)"
+    style="position: absolute;"
   ></canvas>
 </div>
+
+<!-- Toolbar -->
+<app-toolbar
+  [tools]="tools"
+  [canvasState]="canvasState"
+  (colorChange)="onColorChange($event)"
+>
+</app-toolbar>

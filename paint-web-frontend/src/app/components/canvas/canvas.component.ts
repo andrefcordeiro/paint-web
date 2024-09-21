@@ -1,17 +1,32 @@
-import { Component, ElementRef, HostListener, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, Renderer2, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ModalToolPropertiesComponent } from './modal-tool-properties/modal-tool-properties.component';
-import { CanvasTool } from '../interfaces/canvas-tool.interface';
-import { CanvasMemento } from '../interfaces/canvas-memento';
-import { CaretakerService } from '../state-management/caretaker.service';
-import { CanvasState } from '../interfaces/canvas-state';
-import { Point } from '../interfaces/shapes/point.interface';
+import { CanvasTool } from '../../interfaces/canvas-tool.interface';
+import { CanvasMemento } from '../../interfaces/canvas-memento';
+import { CaretakerService } from '../../services/state-management/caretaker.service';
+import { CanvasState } from '../../interfaces/canvas-state';
+import { Point } from '../../interfaces/shapes/point.interface';
 import { Circle } from './shapes/circle';
 import { Rectangle } from './shapes/rectangle';
-import { Memento } from '../state-management/memento.interface';
+import { Memento } from '../../services/state-management/memento.interface';
 import { Line } from './shapes/line';
 import { Shape } from './shapes/shape';
-import { ToolButton } from '../interfaces/tool-button.interface';
+import { ToolButton } from '../../interfaces/tool-button.interface';
+import { BehaviorSubject } from 'rxjs';
+
+/**
+ * Types of operations on canvas.
+ */
+type CanvasOperation = 'drawing';
+
+type DrawOperation = 'drawLine' | 'drawShape' | 'redrawContent';
+
+interface ZoomInfo {
+  scale: number,
+  scaleOffSet: Point,
+  MAX_ZOOM: number,
+  MIN_ZOOM: number
+}
 
 @Component({
   selector: 'app-canvas',
@@ -22,22 +37,22 @@ export class CanvasComponent {
   /**
    * Canvas.
    */
-  @ViewChild('canvas', { static: false }) canvas: ElementRef;
+  @ViewChild('canvas', { static: false }) private canvas: ElementRef;
 
   /**
    * Context.
    */
-  context: CanvasRenderingContext2D;
+  private context: CanvasRenderingContext2D;
 
   /**
    * Background color of the canvas.
    */
-  backgroundColor = 'white';
+  private backgroundColor = 'white';
 
   /**
    * Flag that determines whether the left mouse button is being pressed.
    */
-  mouseDown = false;
+  private mouseDown = false;
 
   /**
    * Available tools.
@@ -85,7 +100,7 @@ export class CanvasComponent {
   /**
    * Coordinates to draw circle with bezier curve.
    */
-  start: Point;
+  private start: Point;
 
   /**
    * State of the canvas.
@@ -95,12 +110,41 @@ export class CanvasComponent {
   /**
    * Latest operation applied to the canvas.
    */
-  latestOperation = 'drawing';
+  private latestOperation: CanvasOperation = 'drawing';
 
   /**
    * Current shape being drawn on the canvas.
    */
-  shape: Shape | null;
+  private shape: Shape | null;
+
+  /**
+   * The distance between the top-left (0,0) canvas coordinates and the top-left of the viewport.
+   */
+  private panOffset = { x: 0, y: 0 };
+
+  /**
+   * Flag that indicates that the user is performing the panning action.
+   */
+  private panningSubject = new BehaviorSubject<boolean>(false);
+
+  /**
+   * Start position of the panning.
+   */
+  private startPanMousePosition = { x: 0, y: 0 };
+
+  /**
+   * Information about the zoom of the canvas.
+   */
+  private zoomInfo: ZoomInfo = {
+    scale: 1,
+    scaleOffSet: { x: 0, y: 0 },
+    MAX_ZOOM: 20, MIN_ZOOM: 0.1
+  };
+
+  /**
+   * Subject to control the next drawing operation on canvas.
+   */
+  private drawingOperationSubject = new BehaviorSubject<DrawOperation | ''>('');
 
   /**
    * Returns the nativeElement of the canvas.
@@ -116,8 +160,9 @@ export class CanvasComponent {
    */
   constructor(
     public dialog: MatDialog,
-    private caretakerService: CaretakerService
-  ) {}
+    private caretakerService: CaretakerService,
+    private renderer: Renderer2,
+  ) { }
 
   ngOnInit() {
     this.initializeCanvasToolsState();
@@ -125,6 +170,66 @@ export class CanvasComponent {
 
   ngAfterViewInit() {
     this.createCanvas();
+
+    this.panningSubject.subscribe((panningFlag) => {
+      if (panningFlag)
+        this.renderer.setStyle(this.canvasElement, 'cursor', 'grab');
+      else
+        this.renderer.setStyle(this.canvasElement, 'cursor', 'url("../../../assets/icons/circle-cursor.cur"), auto');
+    });
+
+    this.createDrawingOperationSubject();
+  }
+
+  /**
+   * Function to adjust the scaled and position on canvas before the drawing.
+   */
+  private adjustScaleAndPosition() {
+    const scaleWidth = this.canvasElement.width * this.zoomInfo.scale;
+    const scaleHeight = this.canvasElement.height * this.zoomInfo.scale;
+    const scaleOffSetX = (scaleWidth - this.canvasElement.width) / 2;
+    const scaleOffSetY = (scaleHeight - this.canvasElement.height) / 2;
+    this.zoomInfo.scaleOffSet = { x: scaleOffSetX, y: scaleOffSetY };
+
+    this.context.translate(this.panOffset.x * this.zoomInfo.scale - scaleOffSetX,
+      this.panOffset.y * this.zoomInfo.scale - scaleOffSetY);
+
+    this.context.scale(this.zoomInfo.scale, this.zoomInfo.scale);
+  }
+
+  /**
+   * Function to create the drawing operation subscription to draw the content on canvas.
+   */
+  private createDrawingOperationSubject() {
+    this.drawingOperationSubject.subscribe((drawOperation) => {
+      this.context.save();
+
+      switch (drawOperation) {
+        case 'drawLine':
+          this.adjustScaleAndPosition();
+          const lastPoint = (this.shape as Line).points.at(-1);
+          if (lastPoint) {
+            this.context.lineTo(lastPoint.x, lastPoint.y);
+            this.context.stroke();
+          }
+          break;
+        case 'drawShape':
+          this.clearContentOnStageRestore();
+          this.adjustScaleAndPosition();
+          this.redrawContent(this.canvasState.shapes);
+          this.shape?.draw(this.context);
+          break;
+        case 'redrawContent':
+          this.clearContentOnStageRestore();
+          this.adjustScaleAndPosition();
+          this.redrawContent(this.canvasState.shapes);
+          break;
+
+        default:
+          break;
+      }
+      this.context.restore()
+    })
   }
 
   /**
@@ -139,7 +244,7 @@ export class CanvasComponent {
     const toolsState = [paintbrush, eraser, circle, rect];
 
     this.canvasState = {
-      latestOperation: 'none',
+      latestOperation: 'drawing',
       color: 'black',
       toolsState: toolsState,
       shapes: [],
@@ -153,8 +258,6 @@ export class CanvasComponent {
    */
   onColorChange(color: string) {
     if (this.canvasState.selectedTool.name !== 'eraser') {
-      this.saveState('globalPropertiesChanged');
-
       this.canvasState.color = color;
       this.context.strokeStyle = color;
       this.context.fillStyle = color;
@@ -165,11 +268,8 @@ export class CanvasComponent {
    * Function to initialize canvas properties.
    */
   private createCanvas() {
-    this.canvasElement.style.width = '100%';
-    this.canvasElement.style.height = '100%';
-
-    this.canvasElement.width = this.canvasElement.offsetWidth;
-    this.canvasElement.height = this.canvasElement.offsetHeight;
+    this.canvasElement.width = window.innerWidth;
+    this.canvasElement.height = window.innerHeight;
 
     this.context = this.canvasElement.getContext('2d')!;
     this.setToolPropertiesContext();
@@ -181,10 +281,10 @@ export class CanvasComponent {
    * @param y
    * @returns Point
    */
-  private getMouseCoordMinusOffset(x: number, y: number): Point {
+  private getMouseCoordinates(x: number, y: number): Point {
     return {
-      x: x - this.canvasElement.offsetLeft,
-      y: y - this.canvasElement.offsetTop,
+      x: (x - this.panOffset.x * this.zoomInfo.scale + this.zoomInfo.scaleOffSet.x) / this.zoomInfo.scale,
+      y: (y - this.panOffset.y * this.zoomInfo.scale + this.zoomInfo.scaleOffSet.y) / this.zoomInfo.scale
     };
   }
 
@@ -192,24 +292,28 @@ export class CanvasComponent {
    * Mouse events.
    */
   onMouseDown(e: MouseEvent) {
+    const clientXY = this.getMouseCoordinates(e.clientX, e.clientY);
+
     if (e.button !== 0 || this.canvasState.disabled) return;
 
     this.mouseDown = true;
-    const p = this.getMouseCoordMinusOffset(e.clientX, e.clientY);
+
+    if (this.panningSubject.value) {
+      this.startPanMousePosition = clientXY;
+    }
 
     switch (this.canvasState.selectedTool.name) {
       case 'paintbrush':
       case 'eraser':
         this.shape = new Line(this.context.strokeStyle, this.context.lineWidth);
-
-        this.saveState('drawing');
+        if (this.latestOperation === 'drawing') this.saveState(this.latestOperation);
         this.context.beginPath();
         break;
 
       case 'circle':
       case 'rect':
-        this.saveState('drawing');
-        this.start = p;
+        if (this.latestOperation === 'drawing') this.saveState(this.latestOperation);
+        this.start = clientXY;
         break;
     }
   }
@@ -219,27 +323,35 @@ export class CanvasComponent {
     this.shape = null;
 
     this.mouseDown = false;
+    this.panningSubject.next(false);
     this.context.closePath();
   }
 
   onMouseMove(e: MouseEvent) {
+    const clientXY = this.getMouseCoordinates(e.clientX, e.clientY);
+
+    if (this.panningSubject.value && this.mouseDown) {
+      this.handlePanning(clientXY);
+      return;
+    }
+
     if (this.mouseDown) {
-      const p = this.getMouseCoordMinusOffset(e.clientX, e.clientY);
 
       switch (this.canvasState.selectedTool.name) {
         case 'paintbrush':
         case 'eraser':
-          this.drawLine(p.x, p.y);
+          (this.shape as Line).pushPoint({ x: clientXY.x, y: clientXY.y });
+          this.drawingOperationSubject.next("drawLine");
           break;
 
         case 'circle':
           this.shape = new Circle(
             this.canvasState.color,
             this.context.lineWidth,
-            { x: p.x, y: p.y },
+            { x: clientXY.x, y: clientXY.y },
             this.start
           );
-          this.drawShape(this.shape);
+          this.drawingOperationSubject.next("drawShape");
           break;
 
         case 'rect':
@@ -247,12 +359,24 @@ export class CanvasComponent {
             this.canvasState.color,
             this.context.lineWidth,
             { x: this.start.x, y: this.start.y },
-            { x: p.x - this.start.x, y: p.y - this.start.y }
+            { x: clientXY.x - this.start.x, y: clientXY.y - this.start.y }
           );
-          this.drawShape(this.shape);
+          this.drawingOperationSubject.next("drawShape");
           break;
       }
     }
+  }
+
+  /**
+  * Function to handle the panning event.
+  * @param clientXY Mouse position.
+  */
+  private handlePanning(clientXY: Point) {
+    const deltaX = clientXY.x - this.startPanMousePosition.x;
+    const deltaY = clientXY.y - this.startPanMousePosition.y;
+    this.panOffset = { x: this.panOffset.x + deltaX, y: this.panOffset.y + deltaY };
+
+    this.drawingOperationSubject.next('redrawContent');
   }
 
   onMouseOut() {
@@ -260,21 +384,24 @@ export class CanvasComponent {
   }
 
   /**
-   * Function to handle keyboard event and change selected tool.
-   * @param e Keyboard event.
+   * Function to handle Keydown event.
+   * @param e Keydown event.
    */
-  @HostListener('document:keyup', ['$event'])
-  private handleKeyboardEvent(e: KeyboardEvent) {
+  @HostListener('document:keydown', ['$event'])
+  private handlePressKeyEvent(e: KeyboardEvent) {
     const key = e.key;
     const controlKeys = ['e', 'b'];
 
-    if (e.ctrlKey && (key === 'z' || key === 'Z')) {
+    if (e.code === 'Space' && !this.mouseDown && !this.panningSubject.value) { // panning
+      this.panningSubject.next(true);
+
+    } else if (e.ctrlKey && (key === 'z' || key === 'Z')) { // undo and redo
       if (e.shiftKey) {
         this.redoOperation();
       } else {
-        this.undoOperation(true);
+        this.undoOperation();
       }
-    } else if (controlKeys.includes(key)) {
+    } else if (controlKeys.includes(key)) { // selected tool change
       const keysTools: { [key: string]: string } = {
         e: 'eraser',
         b: 'paintbrush',
@@ -285,32 +412,20 @@ export class CanvasComponent {
   }
 
   /**
-   * Draw on the canvas.
-   * @param x X coordinate.
-   * @param y Y coordinate.
+   * Function to handle Keyup event.
+   * @param e Keyup event.
    */
-  private drawLine(x: number, y: number) {
-    this.context.lineTo(x, y);
-    this.context.stroke();
-    (this.shape as Line).pushPoint({ x, y });
-  }
-
-  /**
-   * Draw shape on the canvas.
-   * @param shape Shape.
-   */
-  private drawShape(shape: Shape) {
-    // restoring canvas state everytime a new circle is drawn
-    this.undoOperation(false);
-    this.saveState('drawing');
-
-    shape.draw(this.context);
+  @HostListener('document:keyup', ['$event'])
+  private handleReleaseKeyEvent(e: KeyboardEvent) {
+    if (e.code === 'Space') {
+      this.panningSubject.next(false);
+    }
   }
 
   /**
    * Clear all page content before redrawing content on state restore.
    */
-  clearContentOnStageRestore() {
+  private clearContentOnStageRestore() {
     this.context.clearRect(
       0,
       0,
@@ -323,8 +438,6 @@ export class CanvasComponent {
    * Clear all page content.
    */
   clearContent() {
-    this.saveState('drawing');
-
     const rect: Rectangle = new Rectangle(
       'white',
       0,
@@ -398,7 +511,6 @@ export class CanvasComponent {
 
     dialogRef.afterClosed().subscribe((data: CanvasTool) => {
       if (data) {
-        this.saveState('toolPropertiesChanged');
         this.updateSelectedToolState(data);
       }
     });
@@ -449,20 +561,15 @@ export class CanvasComponent {
   private saveState(currentOperation: string) {
     const memento = this.createMementoFromState(this.latestOperation);
     this.caretakerService.pushMemento(memento);
-    this.latestOperation = currentOperation;
+    this.latestOperation = currentOperation as CanvasOperation;
   }
 
   /**
    * Method executed when user press ctrl+z to undo the current operation.
    */
-  private undoOperation(saveCurrentState: boolean) {
-    let currentState = null;
-    if (saveCurrentState) {
-      currentState = this.createMementoFromState(this.latestOperation);
-    }
-    const memento = this.caretakerService.popMemento(
-      currentState
-    ) as CanvasMemento;
+  private undoOperation() {
+    const currentState = this.createMementoFromState(this.latestOperation);
+    const memento = this.caretakerService.popMemento(currentState) as CanvasMemento;
 
     if (memento) this.restoreState(memento);
   }
@@ -471,9 +578,10 @@ export class CanvasComponent {
    * Method executed when user press ctrl+shift+z to redo the latest operation.
    */
   private redoOperation() {
-    const memento = this.caretakerService.popPastMemento() as CanvasMemento;
+    const currentState = this.createMementoFromState(this.latestOperation);
+    const memento = this.caretakerService.restoreDeletedMemento(currentState);
+
     if (!memento) return;
-    this.saveState(memento.getLatestOperation());
 
     this.restoreState(memento);
   }
@@ -490,21 +598,10 @@ export class CanvasComponent {
 
     switch (this.latestOperation) {
       case 'drawing':
-        this.redrawContent(this.canvasState.shapes);
-        break;
-
-      case 'globalPropertiesChanged':
-        this.context.strokeStyle = this.canvasState.color;
-        break;
-
-      case 'toolPropertiesChanged':
-        const toolState = this.canvasState.toolsState.find(
-          (ts) => ts.name === this.canvasState.selectedTool.name
-        );
-        this.updateSelectedToolState(toolState!);
+        this.drawingOperationSubject.next('redrawContent');
         break;
     }
-    this.latestOperation = memento.getLatestOperation();
+    this.latestOperation = memento.getLatestOperation() as CanvasOperation;
   }
 
   /**
@@ -541,5 +638,23 @@ export class CanvasComponent {
 
       if (sInstance) sInstance.draw(this.context);
     });
+  }
+
+  /**
+   * Method to handle the mouse wheel event to control canvas zoom.
+   * @param e Mouse event.
+  */
+  @HostListener('window:wheel', ['$event'])
+  private onMouseWheel(e: any) {
+    if (e.deltaY > 0) {
+      this.zoomInfo.scale -= 0.1;
+    } else {
+      this.zoomInfo.scale += 0.1;
+    }
+
+    this.zoomInfo.scale = Math.max(this.zoomInfo.scale, this.zoomInfo.MIN_ZOOM)
+    this.zoomInfo.scale = Math.min(this.zoomInfo.scale, this.zoomInfo.MAX_ZOOM)
+
+    this.drawingOperationSubject.next('redrawContent');
   }
 }
