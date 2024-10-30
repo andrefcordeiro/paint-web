@@ -8,12 +8,12 @@ import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
-    MongooseModule.forRoot('mongodb://localhost/paint-web'),
-    UsersModule,
-    AuthModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    MongooseModule.forRoot('mongodb://localhost/paint-web'),
+    UsersModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
