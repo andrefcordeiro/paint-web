@@ -11,25 +11,25 @@ export class ImagesService {
   ) {}
 
   async salvarDados(image: Express.MulterS3.File) {
-    const arquivo = new Image();
-    arquivo.fileName = image.key;
-    arquivo.contentLength = image.size;
-    arquivo.contentType = image.mimetype;
-    arquivo.url = image.location;
+    const img = new Image();
+    img.fileName = image.key;
+    img.contentLength = image.size;
+    img.contentType = image.mimetype;
+    img.url = image.location;
 
-    return await this.fotoRepository.save(arquivo);
+    return await this.fotoRepository.save(img);
   }
 
   async salvarVariosDados(images: Express.MulterS3.File[]) {
-    const arrayArquivos = images.map((image) => {
-      const arquivo = new Image();
-      arquivo.fileName = image.key;
-      arquivo.contentLength = image.size;
-      arquivo.contentType = image.mimetype;
-      arquivo.url = image.location;
-      return arquivo;
+    const imgsArray = images.map((image) => {
+      const img = new Image();
+      img.fileName = image.key;
+      img.contentLength = image.size;
+      img.contentType = image.mimetype;
+      img.url = image.location;
+      return img;
     });
 
-    return await this.fotoRepository.save(arrayArquivos);
+    return await this.fotoRepository.save(imgsArray);
   }
 }
