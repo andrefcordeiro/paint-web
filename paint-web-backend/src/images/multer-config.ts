@@ -25,7 +25,7 @@ const multerConfig = {
         path.parse(image.originalname).name.replace(/\s/g, '') + '-' + uuidv4();
 
       const extension = path.parse(image.originalname).ext;
-      cb(null, `${imageName}${extension}`);
+      cb(null, `images/${imageName}${extension}`);
     },
   }),
 };
