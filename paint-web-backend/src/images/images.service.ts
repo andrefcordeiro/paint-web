@@ -1,35 +1,23 @@
 import { Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
+import { ImageFile } from './entities/image-file.entity';
 import { Image } from './entities/image.entity';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class ImagesService {
-  constructor(
-    @InjectRepository(Image)
-    private fotoRepository: Repository<Image>,
-  ) {}
+  constructor(@InjectModel(Image.name) private imageModel: Model<Image>) {}
 
-  async salvarDados(image: Express.MulterS3.File) {
-    const img = new Image();
-    img.fileName = image.key;
-    img.contentLength = image.size;
-    img.contentType = image.mimetype;
-    img.url = image.location;
-
-    return await this.fotoRepository.save(img);
+  async saveImage(userId: string, imageFile: ImageFile) {
+    const image = { url: imageFile.url, userId };
+    const createdImage = new this.imageModel(image);
+    return createdImage.save();
   }
 
-  async salvarVariosDados(images: Express.MulterS3.File[]) {
-    const imgsArray = images.map((image) => {
-      const img = new Image();
-      img.fileName = image.key;
-      img.contentLength = image.size;
-      img.contentType = image.mimetype;
-      img.url = image.location;
-      return img;
+  async saveImages(userId: string, imageFiles: ImageFile[]) {
+    const images = imageFiles.map((imageFile) => {
+      return { url: imageFile.url, userId };
     });
-
-    return await this.fotoRepository.save(imgsArray);
+    return this.imageModel.insertMany(images);
   }
 }
