@@ -16,6 +16,13 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
+  /**
+   * Method that handles user login.
+   *
+   * @param username Username.
+   * @param pass Password.
+   * @returns { Promise<{ access_token: string }> } JSON Web Token.
+   */
   async signIn(
     username: string,
     pass: string,
@@ -32,6 +39,12 @@ export class AuthService {
     };
   }
 
+  /**
+   * Method that handles user creation.
+   *
+   * @param createUserDto User's data.
+   * @returns { Promise<User> } User created.
+   */
   async signUp(createUserDto: CreateUserDto): Promise<User> {
     createUserDto.password = await this.encryptPassword(createUserDto.password);
     try {
@@ -48,6 +61,12 @@ export class AuthService {
     }
   }
 
+  /**
+   * Method that encrypts the user's password
+   *
+   * @param password User's password.
+   * @returns { string } User's encrypted password.
+   */
   private async encryptPassword(password: string) {
     const salt = await bcrypt.genSalt();
     const encryptedPassword = await bcrypt.hash(password, salt);

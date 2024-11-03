@@ -6,6 +6,9 @@ import { v4 as uuidv4 } from 'uuid';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
+/**
+ * Configuration to access AWS S3 bucket for storing images.
+ */
 const s3Config = new S3Client({
   region: process.env.AWS_S3_ACCESS_KEY_REGION,
   credentials: {

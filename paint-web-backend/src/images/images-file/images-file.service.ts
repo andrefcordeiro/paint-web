@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ImageFile } from '../entities/image-file.entity';
 
 /**
- * Service to store the image files on the AWS S3 bucket.
+ * Service to store image files on the AWS S3 bucket.
  */
 @Injectable()
 export class ImageFilesService {
@@ -13,7 +13,12 @@ export class ImageFilesService {
     private imageFileRepository: Repository<ImageFile>,
   ) {}
 
-  saveImageFile(image: Express.MulterS3.File) {
+  /**
+   * Method that stores a image file on the bucket.
+   * @param image Image file.
+   * @returns { Promise<ImageFile> } Image file.
+   */
+  saveImageFile(image: Express.MulterS3.File): Promise<ImageFile> {
     const img = new ImageFile();
     img.fileName = image.key;
     img.contentLength = image.size;
@@ -23,7 +28,12 @@ export class ImageFilesService {
     return this.imageFileRepository.save(img);
   }
 
-  saveImageFiles(images: Express.MulterS3.File[]) {
+  /**
+   * Method that stores multiple image files on the bucket.
+   * @param images List of image file.
+   * @returns { Promise<ImageFile[]> } Image files.
+   */
+  saveImageFiles(images: Express.MulterS3.File[]): Promise<ImageFile[]> {
     const imgsArray = images.map((image) => {
       const img = new ImageFile();
       img.fileName = image.key;

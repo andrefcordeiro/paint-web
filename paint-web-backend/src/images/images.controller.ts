@@ -19,6 +19,9 @@ import multerConfig from './multer-config';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { UsersService } from 'src/users/users.service';
 
+/**
+ * Images endpoints.
+ */
 @Controller('images')
 export class ImagesController {
   constructor(

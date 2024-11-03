@@ -4,6 +4,9 @@ import { UsersModule } from '../users/users.module';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthController } from './auth.controller';
 
+/**
+ * Module to handle user authorization and authentication.
+ */
 @Module({
   imports: [
     UsersModule,
