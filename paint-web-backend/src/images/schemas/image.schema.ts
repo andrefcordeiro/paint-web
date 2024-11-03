@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
+import { RemoveDefaultMongoIdPlugin } from 'src/utils/remove-default-mongo-id.plugin';
 
 export type ImageDocument = HydratedDocument<Image>;
 
@@ -9,7 +10,12 @@ export class Image {
   url: string;
 
   @Prop()
-  userId: string;
+  idS3BucketFile: number;
+
+  @Prop({ type: Types.ObjectId })
+  ownerId: Types.ObjectId;
 }
 
 export const ImageSchema = SchemaFactory.createForClass(Image);
+
+ImageSchema.plugin(RemoveDefaultMongoIdPlugin);

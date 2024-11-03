@@ -1,5 +1,7 @@
+import { Types } from 'mongoose';
+
 export class User {
-  id: string;
+  id: Types.ObjectId;
 
   name: string;
 
