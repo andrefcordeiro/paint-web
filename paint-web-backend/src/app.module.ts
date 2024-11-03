@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ImagesModule } from './images/images.module';
 import { config } from './ormconfig';
+import { UtilsModule } from './utils/utils.module';
 
 import * as dotenv from 'dotenv';
 dotenv.config();
@@ -18,6 +19,7 @@ dotenv.config();
     AuthModule,
     TypeOrmModule.forRoot(config),
     ImagesModule,
+    UtilsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
