@@ -6,7 +6,17 @@
           fontIcon="help icon"
       ></mat-icon>
     </button>
+
+    <a routerLink="/profile" routerLinkActive="active" ariaCurrentWhenActive="page">
+      <button mat-button>
+        <mat-icon
+        fontIcon="account_circle"
+        ></mat-icon>
+      </button>
+    </a>
   </div>
+
+  <router-outlet></router-outlet>
   
   <ng-template
     cdkConnectedOverlay

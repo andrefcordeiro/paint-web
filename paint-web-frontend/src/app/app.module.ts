@@ -19,7 +19,10 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 import { MultiToolButtonComponent } from './components/canvas/toolbar/multi-tool-button/multi-tool-button.component';
 import { OverlayModule } from '@angular/cdk/overlay';
 import { OptionsComponent } from './components/options/options.component';
-import {MatListModule} from '@angular/material/list';
+import { MatListModule } from '@angular/material/list';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { UsersModule } from './users/users.module';
+import { AppRoutingModule } from './app-routing.module';
 
 @NgModule({
   declarations: [
@@ -44,8 +47,10 @@ import {MatListModule} from '@angular/material/list';
     DragDropModule,
     OverlayModule,
     MatListModule,
+    UsersModule,
+    RouterOutlet, RouterLink, RouterLinkActive, AppRoutingModule
   ],
   providers: [CaretakerService],
   bootstrap: [AppComponent],
 })
-export class AppModule {}
+export class AppModule { }
