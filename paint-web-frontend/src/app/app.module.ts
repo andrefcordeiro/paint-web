@@ -9,8 +9,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { ModalToolPropertiesComponent } from '../app/components/canvas/modal-tool-properties/modal-tool-properties.component';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSliderModule } from '@angular/material/slider';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCardModule } from '@angular/material/card';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CaretakerService } from './services/state-management/caretaker.service';
@@ -23,6 +21,7 @@ import { MatListModule } from '@angular/material/list';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { UsersModule } from './users/users.module';
 import { AppRoutingModule } from './app-routing.module';
+import { SharedModule } from './shared/shared.module';
 
 @NgModule({
   declarations: [
@@ -40,15 +39,17 @@ import { AppRoutingModule } from './app-routing.module';
     MatButtonModule,
     MatDialogModule,
     MatSliderModule,
-    MatInputModule,
-    MatFormFieldModule,
     MatCardModule,
     ReactiveFormsModule,
     DragDropModule,
     OverlayModule,
     MatListModule,
     UsersModule,
-    RouterOutlet, RouterLink, RouterLinkActive, AppRoutingModule
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    AppRoutingModule,
+    SharedModule
   ],
   providers: [CaretakerService],
   bootstrap: [AppComponent],
