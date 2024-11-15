@@ -7,6 +7,8 @@ import { Component } from '@angular/core';
 })
 export class OptionsComponent {
   
+  user = null;
+
   /**
    * Flag that determines whether the help overlay container is open or not.
    */

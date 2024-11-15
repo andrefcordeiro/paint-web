@@ -1,0 +1,23 @@
+<div id="page-container">
+  <mat-card>
+    <h1><strong>Create your account</strong></h1>
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <mat-form-field>
+        <mat-label>Username</mat-label>
+        <input matInput formControlName="username">
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Email</mat-label>
+        <input matInput formControlName="email">
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Password</mat-label>
+        <input matInput type="password" formControlName="password">
+      </mat-form-field>
+      
+      <button mat-button [disabled]="!form.valid">
+        Create
+      </button>
+    </form>
+  </mat-card>
+</div>
