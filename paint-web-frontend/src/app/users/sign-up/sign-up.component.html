@@ -3,6 +3,10 @@
     <h1><strong>Create your account</strong></h1>
     <form [formGroup]="form" (ngSubmit)="onSubmit()">
       <mat-form-field>
+        <mat-label>Name</mat-label>
+        <input matInput formControlName="name">
+      </mat-form-field>
+      <mat-form-field>
         <mat-label>Username</mat-label>
         <input matInput formControlName="username">
       </mat-form-field>
