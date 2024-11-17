@@ -13,4 +13,8 @@ export class UsersService {
   createUser(user: User) {
     return this.httpClient.post(environment.apiUrl + '/auth/register', user).toPromise();
   }
+
+  login(username: string, password: string): Promise<{ accessToken: string } | undefined> {
+    return this.httpClient.post<{ accessToken: string } | undefined>(environment.apiUrl + '/auth/login', { username, password }).toPromise();
+  }
 }

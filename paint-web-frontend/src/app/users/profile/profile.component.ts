@@ -14,7 +14,7 @@ export class ProfileComponent implements OnInit {
 
   ngOnInit(): void {
     if (!this.user) {
-      this.router.navigateByUrl('/sign-up')
+      this.router.navigateByUrl('/sign-in')
     }
   }
 }

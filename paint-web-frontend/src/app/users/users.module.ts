@@ -4,6 +4,7 @@ import { SignUpComponent } from './sign-up/sign-up.component';
 import { SharedModule } from '../shared/shared.module';
 import { UsersService } from './users.service';
 import { HttpClientModule } from '@angular/common/http';
+import { SignInComponent } from './sign-in/sign-in.component';
 
 @NgModule({
   imports: [
@@ -13,6 +14,7 @@ import { HttpClientModule } from '@angular/common/http';
   declarations: [
     ProfileComponent,
     SignUpComponent,
+    SignInComponent,
   ],
   providers: [
     UsersService
