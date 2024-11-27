@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UsersService } from '../users.service';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-sign-in',
@@ -10,6 +11,8 @@ import { UsersService } from '../users.service';
 export class SignInComponent {
   
   form: FormGroup;
+
+  errorMessage: string;
 
   constructor(private formBuilder: FormBuilder, private userService: UsersService) {}
 
@@ -22,8 +25,15 @@ export class SignInComponent {
 
   async onSubmit() {
     if (this.form.valid) {
+      this.errorMessage = '';
+
       const user = this.form.value;
-      const res = await this.userService.login(user.username, user.password);
+      try {
+        const res = await this.userService.login(user.username, user.password);
+      } catch (errRes) {
+        const error = (errRes as HttpErrorResponse).error
+        this.errorMessage = error.message; 
+      }
     }
   }
 }

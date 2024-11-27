@@ -1,19 +1,21 @@
 <div id="page-container">
-    <mat-card>
-      <h1><strong>Login</strong></h1>
-      <form [formGroup]="form" (ngSubmit)="onSubmit()">
-        <mat-form-field>
-          <mat-label>Username</mat-label>
-          <input matInput formControlName="username">
-        </mat-form-field>
-        <mat-form-field>
-          <mat-label>Password</mat-label>
-          <input matInput type="password" formControlName="password">
-        </mat-form-field>
-        
-        <button mat-button [disabled]="!form.valid">
-          Login
-        </button>
-      </form>
-    </mat-card>
-  </div>
+  <mat-card>
+    <h1><strong>Login</strong></h1>
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <mat-form-field>
+        <mat-label>Username</mat-label>
+        <input matInput formControlName="username">
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Password</mat-label>
+        <input matInput type="password" formControlName="password">
+      </mat-form-field>
+      
+      <mat-error *ngIf="errorMessage"> {{ errorMessage }} </mat-error>
+
+      <button mat-button [disabled]="!form.valid">
+        Login
+      </button>
+    </form>
+  </mat-card>
+</div>
