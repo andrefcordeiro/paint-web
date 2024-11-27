@@ -28,21 +28,21 @@ export class AuthService {
     pass: string,
   ): Promise<{ accessToken: string }> {
     const user = await this.usersService.findByUsername(username);
-    if (!user) {
-      throw new UnauthorizedException(
-        'User with this username and password does not exists.',
-      );
+
+    if (user) {
+      const isMatch = await bcrypt.compare(pass, user.password);
+
+      if (isMatch) {
+        const payload = { sub: user.id, username: user.username };
+        return {
+          accessToken: await this.jwtService.signAsync(payload),
+        };
+      }
     }
 
-    const isMatch = await bcrypt.compare(pass, user.password);
-
-    if (!isMatch) {
-      throw new UnauthorizedException();
-    }
-    const payload = { sub: user.id, username: user.username };
-    return {
-      accessToken: await this.jwtService.signAsync(payload),
-    };
+    throw new UnauthorizedException(
+      'User with this username and password does not exists.',
+    );
   }
 
   /**
