@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
@@ -26,8 +27,14 @@ export class AuthService {
   async signIn(
     username: string,
     pass: string,
-  ): Promise<{ access_token: string }> {
+  ): Promise<{ accessToken: string }> {
     const user = await this.usersService.findByUsername(username);
+    if (!user) {
+      throw new UnauthorizedException(
+        'User with this username and password does not exists.',
+      );
+    }
+
     const isMatch = await bcrypt.compare(pass, user.password);
 
     if (!isMatch) {
@@ -35,7 +42,7 @@ export class AuthService {
     }
     const payload = { sub: user.id, username: user.username };
     return {
-      access_token: await this.jwtService.signAsync(payload),
+      accessToken: await this.jwtService.signAsync(payload),
     };
   }
 
@@ -51,11 +58,11 @@ export class AuthService {
       const user = await this.usersService.create(createUserDto);
       return user;
     } catch (error) {
-      let message = 'Conflict Error';
+      let message = 'Conflict Error.';
       if (error.message.includes('unique_email')) {
-        message = 'Email already exists';
+        message = 'Email already exists.';
       } else if (error.message.includes('unique_username')) {
-        message = 'Username already exists';
+        message = 'Username already exists.';
       }
       throw new ConflictException(message);
     }
