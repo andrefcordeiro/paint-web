@@ -17,6 +17,20 @@ mat-card {
   justify-content: center;
   width: 30%;
   padding: 30px;
+  gap: 20px;
+  
+  span {
+    align-self: center;
+  }
+
+  button {
+    height: 50px;
+  }
+
+  .black-button {
+    color: white;
+    background-color: black;
+  }
 }
 
 form {

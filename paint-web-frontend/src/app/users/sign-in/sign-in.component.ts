@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UsersService } from '../users.service';
 import { HttpErrorResponse } from '@angular/common/http';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-sign-in',
@@ -14,7 +15,10 @@ export class SignInComponent {
 
   errorMessage: string;
 
-  constructor(private formBuilder: FormBuilder, private userService: UsersService) {}
+  constructor(private formBuilder: FormBuilder, 
+    private userService: UsersService,
+    private router: Router
+  ) {}
 
   ngOnInit() {
     this.form = this.formBuilder.group({
@@ -35,5 +39,9 @@ export class SignInComponent {
         this.errorMessage = error.message; 
       }
     }
+  }
+
+  navigateToSignUpPage() {
+    this.router.navigateByUrl('/sign-up')
   }
 }
