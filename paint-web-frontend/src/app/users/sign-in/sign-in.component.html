@@ -13,13 +13,13 @@
       
       <mat-error *ngIf="errorMessage"> {{ errorMessage }} </mat-error>
 
-      <button mat-button [disabled]="!form.valid">
+      <button mat-button [disabled]="!form.valid" class="form-button">
         Login
       </button>
     </form>
     <span> or </span>
   
-    <button mat-button (click)="navigateToSignUpPage()" class="black-button">
+    <button mat-button (click)="navigateToSignUpPage()" class="form-button-black">
       Create account
     </button>
   </mat-card>
