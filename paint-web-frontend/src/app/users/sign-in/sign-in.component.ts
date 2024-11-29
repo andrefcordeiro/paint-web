@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UsersService } from '../users.service';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-sign-in',
@@ -15,6 +16,14 @@ export class SignInComponent {
 
   errorMessage: string;
 
+  passwordErrorMessage: string;
+
+  private subscriptions = new Subscription();
+
+  get password() {
+    return this.form.get('password');
+  }
+
   constructor(private formBuilder: FormBuilder, 
     private userService: UsersService,
     private router: Router
@@ -25,6 +34,16 @@ export class SignInComponent {
       username: ['', Validators.required],
       password: ['', [Validators.required, Validators.minLength(8)]],
     })
+
+    this.subscriptions.add(this.form.valueChanges.subscribe(() => {
+      if (this.password?.errors) {
+        this.passwordErrorMessage = 'Password must be at least 8 characters long.'
+      }
+    }));
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.unsubscribe();
   }
 
   async onSubmit() {
