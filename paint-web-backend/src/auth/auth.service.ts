@@ -59,7 +59,7 @@ export class AuthService {
     } catch (error) {
       let message = 'Conflict Error.';
       if (error.message.includes('unique_email')) {
-        message = 'Email already exists.';
+        message = 'The email address is already registered.';
       } else if (error.message.includes('unique_username')) {
         message = 'Username already exists.';
       }
