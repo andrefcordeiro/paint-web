@@ -11,8 +11,9 @@ import { Line } from './shapes/line';
 import { Shape } from './shapes/shape';
 import { ToolButton } from '../../interfaces/tool-button.interface';
 import { BehaviorSubject } from 'rxjs';
-import { CaretakerService } from '../services/caretaker.service';
-import { Memento } from '../services/memento.interface';
+import { CaretakerService } from '../services/canvas-state-management/caretaker.service';
+import { Memento } from '../services/canvas-state-management/memento.interface';
+import { ModalSaveImageComponent } from './modal-save-image/modal-save-image.component';
 
 /**
  * Types of operations on canvas.
@@ -91,9 +92,14 @@ export class CanvasComponent {
       onclickFunction: this.clearContent.bind(this),
     },
     {
-      name: 'save-canvas',
+      name: 'download-canvas',
       iconName: 'get_app icon',
       onclickFunction: this.downloadImage.bind(this),
+    },
+    {
+      name: 'save-canvas',
+      iconName: 'save icon',
+      onclickFunction: this.saveImage.bind(this),
     },
   ];
 
@@ -166,6 +172,7 @@ export class CanvasComponent {
 
   ngOnInit() {
     this.initializeCanvasToolsState();
+    this.saveImage();
   }
 
   ngAfterViewInit() {
@@ -528,6 +535,24 @@ export class CanvasComponent {
     link.click();
     document.body.removeChild(link);
   }
+
+  /**
+   * Function called to save the canvas content as an image on the system.
+   */
+  saveImage() {
+    const dialogRef = this.dialog.open(ModalSaveImageComponent, {
+      data: this.canvasState.selectedTool,
+      width: '400px',
+      height: '270px',
+    });
+
+    dialogRef.afterClosed().subscribe((data: CanvasTool) => {
+      if (data) {
+        this.updateSelectedToolState(data);
+      }
+    });
+  }
+  
 
   /**
    * Function to handle the window resize event.

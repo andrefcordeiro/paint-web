@@ -10,7 +10,8 @@ import { MatDialogModule } from "@angular/material/dialog";
 import { RouterLink, RouterLinkActive, RouterOutlet } from "@angular/router";
 import { MatSliderModule } from '@angular/material/slider';
 import { OptionsComponent } from "./options/options.component";
-import { CaretakerService } from "./services/caretaker.service";
+import { CaretakerService } from "./services/canvas-state-management/caretaker.service";
+import { ModalSaveImageComponent } from './canvas/modal-save-image/modal-save-image.component';
 
 
 @NgModule({
@@ -30,6 +31,7 @@ import { CaretakerService } from "./services/caretaker.service";
     ToolbarComponent,
     MultiToolButtonComponent,
     OptionsComponent,
+    ModalSaveImageComponent,
   ],
   providers: [
     CaretakerService
