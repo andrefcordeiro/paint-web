@@ -10,7 +10,12 @@ export class ProfileComponent implements OnInit {
 
   constructor(private router: Router) { }
 
-  user = false;
+  // user = false;
+  user = {
+    name: "a",
+    username: "a",
+    email: "andre@gmail.com",
+  }
 
   ngOnInit(): void {
     if (!this.user) {
