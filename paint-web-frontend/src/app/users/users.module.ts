@@ -5,11 +5,13 @@ import { SharedModule } from '../shared/shared.module';
 import { UsersService } from './users.service';
 import { HttpClientModule } from '@angular/common/http';
 import { SignInComponent } from './sign-in/sign-in.component';
+import { UsersRoutingModule } from './users-routing.module';
 
 @NgModule({
   imports: [
     SharedModule,
-    HttpClientModule
+    HttpClientModule,
+    UsersRoutingModule
   ],
   declarations: [
     ProfileComponent,
