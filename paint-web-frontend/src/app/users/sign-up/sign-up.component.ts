@@ -1,6 +1,7 @@
 import { Component } from "@angular/core";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { UsersService } from "../users.service";
+import { HttpErrorResponse } from "@angular/common/http";
 
 @Component({
   selector: 'app-sign-up',
@@ -10,6 +11,8 @@ import { UsersService } from "../users.service";
 export class SignUpComponent {
 
   form: FormGroup;
+
+  errorMessage: string;
 
   constructor(private formBuilder: FormBuilder, private userService: UsersService) {}
 
@@ -24,8 +27,15 @@ export class SignUpComponent {
 
   async onSubmit() {
     if (this.form.valid) {
+      this.errorMessage = '';
+
       const user = this.form.value;
-      await this.userService.createUser(user);
+      try {
+        const res = await this.userService.createUser(user);
+      } catch (errRes) {
+        const error = (errRes as HttpErrorResponse).error
+        this.errorMessage = error.message; 
+      }
      
     }
   }

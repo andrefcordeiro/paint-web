@@ -19,6 +19,8 @@
         <input matInput type="password" formControlName="password">
       </mat-form-field>
       
+      <mat-error *ngIf="errorMessage"> {{ errorMessage }} </mat-error>
+
       <button mat-button [disabled]="!form.valid" class="form-button">
         Create
       </button>
