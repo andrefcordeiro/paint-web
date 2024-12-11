@@ -8,6 +8,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ImageSchema } from './schemas/image.schema';
 import { Image } from './entities/image.entity';
 import { ImageFilesService } from './images-file/images-file.service';
+import { ImageFilesServiceLocal } from './images-file/images-file-local.service';
 
 @Module({
   imports: [
@@ -16,6 +17,6 @@ import { ImageFilesService } from './images-file/images-file.service';
     MongooseModule.forFeature([{ name: Image.name, schema: ImageSchema }]),
   ],
   controllers: [ImagesController],
-  providers: [ImagesService, ImageFilesService],
+  providers: [ImagesService, ImageFilesService, ImageFilesServiceLocal],
 })
 export class ImagesModule {}
