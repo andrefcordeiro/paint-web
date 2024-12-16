@@ -4,9 +4,10 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { CanvasTool } from 'src/app/interfaces/canvas-tool.interface';
 
 @Component({
-  selector: 'app-modal-tool-properties',
-  templateUrl: './modal-tool-properties.component.html',
-  styleUrls: ['./modal-tool-properties.component.scss'],
+    selector: 'app-modal-tool-properties',
+    templateUrl: './modal-tool-properties.component.html',
+    styleUrls: ['./modal-tool-properties.component.scss'],
+    standalone: false
 })
 export class ModalToolPropertiesComponent {
   /**

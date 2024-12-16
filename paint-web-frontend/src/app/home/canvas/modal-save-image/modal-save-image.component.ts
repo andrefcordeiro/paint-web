@@ -5,9 +5,10 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { ImageFile } from 'src/app/interfaces/image-file.interface';
 
 @Component({
-  selector: 'app-modal-save-image',
-  templateUrl: './modal-save-image.component.html',
-  styleUrls: ['./modal-save-image.component.scss']
+    selector: 'app-modal-save-image',
+    templateUrl: './modal-save-image.component.html',
+    styleUrls: ['./modal-save-image.component.scss'],
+    standalone: false
 })
 export class ModalSaveImageComponent {
 

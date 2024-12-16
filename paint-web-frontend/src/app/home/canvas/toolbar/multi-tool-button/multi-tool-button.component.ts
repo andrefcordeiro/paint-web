@@ -2,12 +2,13 @@ import { Component, Input, OnInit } from '@angular/core';
 import { ToolButton } from 'src/app/interfaces/tool-button.interface';
 
 @Component({
-  selector: 'app-multi-tool-button',
-  templateUrl: './multi-tool-button.component.html',
-  styleUrls: [
-    './multi-tool-button.component.scss',
-    '../toolbar.component.scss',
-  ],
+    selector: 'app-multi-tool-button',
+    templateUrl: './multi-tool-button.component.html',
+    styleUrls: [
+        './multi-tool-button.component.scss',
+        '../toolbar.component.scss',
+    ],
+    standalone: false
 })
 export class MultiToolButtonComponent implements OnInit {
   /**
