@@ -4,13 +4,17 @@
   width: 100%;
   height: 100%;
   align-items: center;
-  justify-content: center;
+  padding: 50px 0px 50px;
 }
 
 mat-card {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  width: 30%;
+  justify-content: start;
+  width: 40%;
   padding: 30px;
+}
+
+#profile-icon {
+  transform: scale(5);
 }

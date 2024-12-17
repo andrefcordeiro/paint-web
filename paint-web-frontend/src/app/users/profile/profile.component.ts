@@ -13,9 +13,10 @@ export class ProfileComponent implements OnInit {
 
   // user = false;
   user = {
-    name: "a",
-    username: "a",
-    email: "andre@gmail.com",
+    name: "John Doe",
+    username: "johndoe",
+    email: "jhondoe@gmail.com",
+    createdAt: "01/01/2001"
   }
 
   ngOnInit(): void {
