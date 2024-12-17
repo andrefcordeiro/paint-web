@@ -7,7 +7,7 @@ import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
-import { User } from 'src/users/entities/user.entity';
+import { UserDto } from 'src/users/dto/user.dto';
 
 @Injectable()
 export class AuthService {
@@ -26,7 +26,7 @@ export class AuthService {
   async signIn(
     username: string,
     pass: string,
-  ): Promise<{ accessToken: string }> {
+  ): Promise<{ user: UserDto; accessToken: string }> {
     const user = await this.usersService.findByUsername(username);
 
     if (user) {
@@ -34,7 +34,9 @@ export class AuthService {
 
       if (isMatch) {
         const payload = { sub: user.id, username: user.username };
+        const userDto = UserDto.fromDomain(user);
         return {
+          user: userDto,
           accessToken: await this.jwtService.signAsync(payload),
         };
       }
@@ -49,13 +51,15 @@ export class AuthService {
    * Method that handles user creation.
    *
    * @param createUserDto User's data.
-   * @returns { Promise<User> } User created.
+   * @returns { Promise<UserDto> } User created.
    */
-  async signUp(createUserDto: CreateUserDto): Promise<User> {
+  async signUp(createUserDto: CreateUserDto): Promise<UserDto> {
     createUserDto.password = await this.encryptPassword(createUserDto.password);
     try {
       const user = await this.usersService.create(createUserDto);
-      return user;
+      const userDto = UserDto.fromDomain(user);
+
+      return userDto;
     } catch (error) {
       let message = 'Conflict Error.';
       if (error.message.includes('unique_email')) {
