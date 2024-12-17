@@ -14,7 +14,7 @@ export class UsersService {
     return this.httpClient.post(environment.apiUrl + '/auth/register', user).toPromise();
   }
 
-  login(username: string, password: string): Promise<{ accessToken: string } | undefined> {
-    return this.httpClient.post<{ accessToken: string } | undefined>(environment.apiUrl + '/auth/login', { username, password }).toPromise();
+  login(username: string, password: string): Promise<{ accessToken: string, user: User } | undefined> {
+    return this.httpClient.post<{ accessToken: string, user: User } | undefined>(environment.apiUrl + '/auth/login', { username, password }).toPromise();
   }
 }

@@ -1,4 +1,4 @@
-<div id="page-container">
+<div id="page-container" *ngIf="user">
   <mat-card>
     <h1>{{ user.name }}</h1> 
     <p> {{ "@" + user.username }}</p>

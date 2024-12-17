@@ -54,6 +54,16 @@ export class SignInComponent {
       const user = this.form.value;
       try {
         const res = await this.userService.login(user.username, user.password);
+
+        if (!res?.accessToken || !res?.user) {
+          this.errorMessage = 'Invalid user information'; 
+          return;
+        }
+
+        localStorage.setItem('acessToken', res?.accessToken);
+        localStorage.setItem('user', JSON.stringify(res?.user));
+        this.router.navigateByUrl('/profile')
+        
       } catch (errRes) {
         const error = (errRes as HttpErrorResponse).error
         this.errorMessage = error.message; 
