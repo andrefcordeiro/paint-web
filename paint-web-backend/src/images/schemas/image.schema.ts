@@ -4,7 +4,7 @@ import { RemoveDefaultMongoIdPlugin } from 'src/utils/remove-default-mongo-id.pl
 
 export type ImageDocument = HydratedDocument<Image>;
 
-@Schema()
+@Schema({ timestamps: true })
 export class Image {
   @Prop()
   url: string;

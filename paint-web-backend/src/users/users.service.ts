@@ -11,6 +11,7 @@ export class UsersService {
 
   create(createUserDto: CreateUserDto) {
     const createdUser = new this.userModel(createUserDto);
+    createdUser.createdAt = new Date();
     return createdUser.save();
   }
 
