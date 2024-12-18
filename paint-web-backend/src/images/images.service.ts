@@ -49,6 +49,31 @@ export class ImagesService {
   }
 
   /**
+   * Method that saves the image document on MongoDB.
+   *
+   * @param ownerId Id of the user uploading the image.
+   * @param imageFile Object representing the image file saved locally.
+   * @returns {Promise<Image>} Image document.
+   */
+  saveImageLocally(ownerId: string, imageFile) {
+    try {
+      const image: CreateImageDto = {
+        url: imageFile.path,
+        idS3BucketFile: 1,
+        ownerId: new Types.ObjectId(ownerId),
+      };
+      const createdImage = new this.imageModel(image);
+
+      return createdImage.save();
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException(
+        'Error while trying to save image: ' + error,
+      );
+    }
+  }
+
+  /**
    * Method that saves multiple image documents on MongoDB and calls the imageFilesService to store the images files on the S3 Bucket.
    *
    * @param ownerId Id of the user uploading the images.
