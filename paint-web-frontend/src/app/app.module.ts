@@ -7,6 +7,8 @@ import { AppRoutingModule } from './app-routing.module';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { BrowserModule } from '@angular/platform-browser';
 import { HomeModule } from './home/home.module';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { httpInterceptor } from './http.interceptor';
 
 
 @NgModule({
@@ -24,5 +26,10 @@ import { HomeModule } from './home/home.module';
     RouterLinkActive,
   ],
   bootstrap: [AppComponent],
+  providers: [provideHttpClient(
+    withInterceptors([
+      httpInterceptor
+    ])
+  )],
 })
 export class AppModule { }
