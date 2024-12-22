@@ -9,6 +9,7 @@ import {
   Get,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { ImagesService } from './images.service';
 import {
@@ -69,9 +70,9 @@ export class ImagesController {
     return this.imagesService.saveImageLocally(user.id, image);
   }
 
-  @Get(':userId')
+  @Get()
   @UseGuards(AuthGuard)
-  getImagesByUserId(@Param('userId') userId: string) {
+  getImagesByUserId(@Query('user-id') userId: string) {
     return this.imagesService.findByUserId(userId);
   }
 

@@ -1,5 +1,5 @@
 import { diskStorage } from 'multer';
-import { extname, join } from 'path';
+import { join } from 'path';
 
 import * as dotenv from 'dotenv';
 dotenv.config();
@@ -15,8 +15,8 @@ const multerConfigLocal = {
       cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
-      let ext = extname(file.originalname);
-      let filename = `${Date.now()}${ext}`;
+      let [filename, ext] = file.originalname.split('.');
+      filename = `${filename}-${Date.now()}.${ext}`;
 
       if (!ext) {
         ext = file.mimetype.split('/').pop();
