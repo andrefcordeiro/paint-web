@@ -113,7 +113,7 @@ export class ImagesService {
    * @returns {Promise<Image[]>} Image documents.
    */
   findByUserId(userId: string): Promise<Image[]> {
-    return this.imageModel.find({ userId: new Types.ObjectId(userId) });
+    return this.imageModel.find({ ownerId: new Types.ObjectId(userId) });
   }
 
   /**
