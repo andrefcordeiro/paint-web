@@ -173,7 +173,6 @@ export class CanvasComponent {
 
   ngOnInit() {
     this.initializeCanvasToolsState();
-    // this.saveImage();
   }
 
   ngAfterViewInit() {
@@ -541,12 +540,12 @@ export class CanvasComponent {
    * Function called to save the canvas content as an image on the system.
    */
   saveImage() {
-    var imageData = this.canvasElement.toDataURL('image/png');
-
-    this.dialog.open(ModalSaveImageComponent, {
-      data: imageData,
-      width: '400px',
-      height: '270px',
+    this.canvasElement.toBlob((blob) => {
+      this.dialog.open(ModalSaveImageComponent, {
+        data: blob,
+        width: '400px',
+        height: '270px',
+      })
     });
   }
   

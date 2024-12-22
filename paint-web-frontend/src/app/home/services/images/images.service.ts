@@ -10,8 +10,10 @@ export class ImagesService {
 
   constructor(private httpClient: HttpClient) { }
 
-  uploadImage(image: ImageFile) {
-    console.log("🚀 ~ ImagesService ~ uploadImage ~ image:", image)
-    // return this.httpClient.post(environment.apiUrl + '/auth/register', user).toPromise();
+  uploadImage(image: ImageFile): Promise<any>  {
+    let formData: FormData = new FormData();
+    formData.append('image', image.imageData);
+    
+    return this.httpClient.post(environment.apiUrl + '/images', formData).toPromise();
   }
 }

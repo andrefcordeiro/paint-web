@@ -34,6 +34,6 @@ export class ModalSaveImageComponent {
     this.image.fileName = this.form.get('fileName')?.value;
 
     this.imagesService.uploadImage(this.image);
-    // this.dialogRef.close();
+    this.dialogRef.close();
   }
 }
