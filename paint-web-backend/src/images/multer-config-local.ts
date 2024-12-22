@@ -15,8 +15,14 @@ const multerConfigLocal = {
       cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
-      const ext = extname(file.originalname);
-      const filename = `${Date.now()}${ext}`;
+      let ext = extname(file.originalname);
+      let filename = `${Date.now()}${ext}`;
+
+      if (!ext) {
+        ext = file.mimetype.split('/').pop();
+        filename = `${filename}.${ext}`;
+      }
+
       cb(null, filename);
     },
   }),

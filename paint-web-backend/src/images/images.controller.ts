@@ -69,20 +69,6 @@ export class ImagesController {
     return this.imagesService.saveImageLocally(user.id, image);
   }
 
-  @Post('multiple')
-  @UseGuards(AuthGuard)
-  @UseInterceptors(
-    FileFieldsInterceptor([{ name: 'images' }], multerConfigLocal),
-  )
-  async uploadMultipleImages(
-    @UploadedFiles()
-    images: Express.MulterS3.File[],
-    @Req() req: Request,
-  ) {
-    const user = await this.userService.findByUsername(req['user'].username);
-    return this.imagesService.saveImages(user.id, images);
-  }
-
   @Get(':userId')
   @UseGuards(AuthGuard)
   getImagesByUserId(@Param('userId') userId: string) {
