@@ -19,6 +19,10 @@ export class ImagesService {
   }
 
   getImagesByUser(userId: string) {
-    return this.httpClient.get<Promise<Image[]>>(environment.apiUrl + `/images?user-id=${userId}`).toPromise();
+    return this.httpClient.get<Image[]>(environment.apiUrl + `/images?user-id=${userId}`).toPromise();
+  }
+
+  deleteImage(imageId: string) {
+    return this.httpClient.delete<Image[]>(environment.apiUrl + `/images/${imageId}`).toPromise();
   }
 }

@@ -33,4 +33,9 @@ export class ProfileComponent implements OnInit {
     this.usersService.logout();
     window.location.reload();
   }
+
+  async deleteImage(imageId: string) {
+    await this.imagesService.deleteImage(imageId);
+    this.images = await this.imagesService.getImagesByUser(this.user.id);
+  }
 }
