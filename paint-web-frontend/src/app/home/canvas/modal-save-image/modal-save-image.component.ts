@@ -1,8 +1,8 @@
 import { Component, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ImagesService } from '../../services/images/images.service';
+import { ImagesService } from '../../../images/images.service';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { ImageFile } from 'src/app/interfaces/image-file.interface';
+import { ImageUpload } from 'src/app/interfaces/image-upload.interface';
 
 @Component({
     selector: 'app-modal-save-image',
@@ -14,12 +14,12 @@ export class ModalSaveImageComponent {
 
   form: FormGroup;
 
-  image: ImageFile;
+  image: ImageUpload;
 
   constructor(private formBuilder: FormBuilder, 
     private imagesService: ImagesService,
     private dialogRef: MatDialogRef<ModalSaveImageComponent>,
-    @Inject(MAT_DIALOG_DATA) public imageData: string
+    @Inject(MAT_DIALOG_DATA) public imageData: Blob
   ) {
     this.image = { fileName: '', imageData };
   }

@@ -6,14 +6,21 @@ import { UsersService } from './users.service';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { SignInComponent } from './sign-in/sign-in.component';
 import { UsersRoutingModule } from './users-routing.module';
+import { ImagesModule } from '../images/images.module';
 
-@NgModule({ declarations: [
-        ProfileComponent,
-        SignUpComponent,
-        SignInComponent,
-    ], imports: [SharedModule,
-        UsersRoutingModule], providers: [
-        UsersService,
-        provideHttpClient(withInterceptorsFromDi())
-    ] })
+@NgModule({ 
+  declarations: [
+    ProfileComponent,
+    SignUpComponent,
+    SignInComponent,
+  ], 
+  imports: [
+    SharedModule,
+    UsersRoutingModule,
+    ImagesModule
+  ], 
+  providers: [
+    UsersService,
+    provideHttpClient(withInterceptorsFromDi())
+  ]})
 export class UsersModule { }

@@ -1,8 +1,19 @@
 <div id="page-container" *ngIf="user">
-  <mat-card>
+  <div id="header">
     <h1>{{ user.name }}</h1> 
     <p> {{ "@" + user.username }}</p>
     <p> {{ user.email }}</p>
     <p>Joined {{ user.createdAt }}</p>
-  </mat-card>
+  </div>
+
+  <div id="images" *ngIf="images">
+    <mat-card *ngFor="let image of images">
+      <mat-card-header>
+        {{ image.url.split('uploads/')[1] }}
+      </mat-card-header>
+      <img mat-card-image src="{{ image.url }}" 
+      alt="Put image name"
+      >
+    </mat-card>
+  </div>
 </div>

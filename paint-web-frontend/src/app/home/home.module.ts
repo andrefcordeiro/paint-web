@@ -12,6 +12,7 @@ import { MatSliderModule } from '@angular/material/slider';
 import { OptionsComponent } from "./options/options.component";
 import { CaretakerService } from "./services/canvas-state-management/caretaker.service";
 import { ModalSaveImageComponent } from './canvas/modal-save-image/modal-save-image.component';
+import { ImagesModule } from "../images/images.module";
 
 
 @NgModule({
@@ -24,6 +25,7 @@ import { ModalSaveImageComponent } from './canvas/modal-save-image/modal-save-im
     RouterOutlet,
     RouterLink,
     RouterLinkActive,
+    ImagesModule
   ],
   declarations: [
     CanvasComponent,

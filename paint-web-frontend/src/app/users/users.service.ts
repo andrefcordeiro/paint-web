@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { User } from '../interfaces/user.interface';
-import { environment } from 'src/environments/environment.development';
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -15,6 +15,7 @@ export class UsersService {
   }
 
   login(username: string, password: string): Promise<{ accessToken: string, user: User } | undefined> {
-    return this.httpClient.post<{ accessToken: string, user: User } | undefined>(environment.apiUrl + '/auth/login', { username, password }).toPromise();
+    return this.httpClient.post<{ accessToken: string, user: User } | undefined>(
+      environment.apiUrl + '/auth/login', { username, password }).toPromise();
   }
 }
