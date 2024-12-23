@@ -12,6 +12,6 @@ async function bootstrap() {
   // Serving the images saved locally to the web application
   app.use('/uploads', express.static(join(__dirname, '..', 'uploads')));
 
-  await app.listen(3000);
+  await app.listen(process.env.PORT);
 }
 bootstrap();

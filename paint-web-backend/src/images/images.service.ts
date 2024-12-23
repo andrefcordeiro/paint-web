@@ -56,9 +56,10 @@ export class ImagesService {
    * @returns {Promise<Image>} Image document.
    */
   saveImageLocally(ownerId: string, imageFile) {
+    const imagePath = `http://localhost:${process.env.PORT}/uploads/${imageFile.filename}`;
     try {
       const image: CreateImageDto = {
-        url: imageFile.path,
+        url: imagePath,
         idS3BucketFile: 1,
         ownerId: new Types.ObjectId(ownerId),
       };
