@@ -3,7 +3,9 @@
     <h1>{{ user.name }}</h1> 
     <p> {{ "@" + user.username }}</p>
     <p> {{ user.email }}</p>
-    <p>Joined {{ user.createdAt }}</p>
+    <p>Joined {{ user.createdAt | date: 'dd/MM/yyyy'}}</p>
+
+    <button class="form-button" mat-button (click)="logout()"> Logout </button>
   </div>
 
   <div id="images" *ngIf="images">

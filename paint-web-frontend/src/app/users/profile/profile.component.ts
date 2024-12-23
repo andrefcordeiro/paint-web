@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { ImagesService } from 'src/app/images/images.service';
 import { Image } from 'src/app/interfaces/image.interface';
 import { User } from 'src/app/interfaces/user.interface';
+import { UsersService } from '../users.service';
 
 @Component({
     selector: 'app-profile',
@@ -13,7 +14,8 @@ import { User } from 'src/app/interfaces/user.interface';
 export class ProfileComponent implements OnInit {
 
   constructor(private router: Router, 
-    private imagesService: ImagesService) { }
+    private imagesService: ImagesService,
+    private usersService: UsersService) { }
 
   user: User;
 
@@ -24,9 +26,11 @@ export class ProfileComponent implements OnInit {
     if (!this.user) {
       this.router.navigateByUrl('/sign-in')
     }
-    // console.log("🚀 ~ ProfileComponent ~ ngOnInit ~ this.user:", this.user)
-
     this.images = await this.imagesService.getImagesByUser(this.user.id);
-    console.log("🚀 ~ ProfileComponent ~ ngOnInit ~ this.images:", this.images)
+  }
+
+  logout() {
+    this.usersService.logout();
+    window.location.reload();
   }
 }

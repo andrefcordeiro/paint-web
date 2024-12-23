@@ -18,4 +18,9 @@ export class UsersService {
     return this.httpClient.post<{ accessToken: string, user: User } | undefined>(
       environment.apiUrl + '/auth/login', { username, password }).toPromise();
   }
+
+  logout() {
+    localStorage.removeItem('acessToken');
+    localStorage.removeItem('user');
+  }
 }
