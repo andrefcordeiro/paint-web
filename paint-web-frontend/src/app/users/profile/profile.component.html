@@ -4,13 +4,13 @@
     <p> {{ "@" + user.username }}</p>
     <p>Joined {{ user.createdAt | date: 'dd/MM/yyyy'}}</p>
 
-    <button class="form-button" mat-button (click)="logout()"> Logout </button>
+    <button class="form-button" mat-button (click)="logout()"> Log out </button>
   </div>
 
   <div id="images" *ngIf="images">
     <mat-card *ngFor="let image of images">
       <mat-card-header>
-        <p> {{ image.url.split('uploads/')[1] }} </p>
+        <p> {{ image.url.split('drawings/')[1] }} </p>
         <button (click)="deleteImage(image.id)">
           <mat-icon>close</mat-icon>
         </button>

@@ -7,7 +7,7 @@ dotenv.config();
 /**
  * Multer configuration for saving images locally.
  */
-const uploadDir = join(process.cwd(), 'uploads');
+const uploadDir = join(process.cwd(), 'uploads/drawings');
 
 const multerConfigLocal = {
   storage: diskStorage({
