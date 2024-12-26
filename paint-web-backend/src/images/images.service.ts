@@ -3,6 +3,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -12,6 +13,11 @@ import { CreateImageDto } from './dto/create-image.dto';
 
 @Injectable()
 export class ImagesService {
+  /**
+   * Máx number of uploads per user.
+   */
+  private readonly MAX_NUMBER_OF_UPLOADS = 5;
+
   constructor(
     @InjectModel(Image.name) private imageModel: Model<Image>,
     private readonly imageFilesService: ImageFilesService,
@@ -28,6 +34,8 @@ export class ImagesService {
     ownerId: string,
     imageFile: Express.MulterS3.File,
   ): Promise<Image> {
+    await this.validateUserCanUploadImages(ownerId, 1);
+
     try {
       const imgSavedFile =
         await this.imageFilesService.saveImageFile(imageFile);
@@ -55,7 +63,9 @@ export class ImagesService {
    * @param imageFile Object representing the image file saved locally.
    * @returns {Promise<Image>} Image document.
    */
-  saveImageLocally(ownerId: string, imageFile) {
+  async saveImageLocally(ownerId: string, imageFile) {
+    await this.validateUserCanUploadImages(ownerId, 1);
+
     const imagePath = `http://localhost:${process.env.PORT}/uploads/drawings/${imageFile.filename}`;
     try {
       const image: CreateImageDto = {
@@ -85,6 +95,8 @@ export class ImagesService {
     ownerId: string,
     imageFiles: Express.MulterS3.File[],
   ): Promise<Image[]> {
+    await this.validateUserCanUploadImages(ownerId, imageFiles.length);
+
     try {
       const imgSavedFiles = await this.imageFilesService.saveImageFiles(
         imageFiles['images'],
@@ -108,7 +120,28 @@ export class ImagesService {
   }
 
   /**
-   * Method that find all images uploaded by a specific user.
+   * Method that validates if a user can upload more images.
+   * @param userId Id of the user uploading the images.
+   * @param numOfNewImages Number of images to be uploaded.
+   * @returns {Boolean} True if user can upload the images, false if not.
+   */
+  private async validateUserCanUploadImages(
+    userId: string,
+    numOfNewImages: number,
+  ) {
+    const numOfImagesUploaded = await this.imageModel.countDocuments({
+      ownerId: new Types.ObjectId(userId),
+    });
+
+    if (numOfImagesUploaded + numOfNewImages > this.MAX_NUMBER_OF_UPLOADS) {
+      throw new UnprocessableEntityException(
+        `A user cannot upload more than ${this.MAX_NUMBER_OF_UPLOADS} images`,
+      );
+    }
+  }
+
+  /**
+   * Method that finds all images uploaded by a specific user.
    *
    * @param userId Id of the user uploading the image.
    * @returns {Promise<Image[]>} Image documents.
