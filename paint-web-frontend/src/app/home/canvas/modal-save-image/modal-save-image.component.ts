@@ -1,8 +1,10 @@
 import { Component, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ImagesService } from '../../../images/images.service';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { ImageUpload } from 'src/app/interfaces/image-upload.interface';
+import { GenericErrorModalComponent } from 'src/app/shared/generic-error-modal/generic-error-modal.component';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
     selector: 'app-modal-save-image',
@@ -19,7 +21,8 @@ export class ModalSaveImageComponent {
   constructor(private formBuilder: FormBuilder, 
     private imagesService: ImagesService,
     private dialogRef: MatDialogRef<ModalSaveImageComponent>,
-    @Inject(MAT_DIALOG_DATA) public imageData: Blob
+    @Inject(MAT_DIALOG_DATA) public imageData: Blob,
+    public dialog: MatDialog,
   ) {
     this.image = { fileName: '', imageData };
   }
@@ -30,10 +33,20 @@ export class ModalSaveImageComponent {
     })
   }
 
-  saveImage() {
+  async saveImage() {
     this.image.fileName = this.form.get('fileName')?.value;
 
-    this.imagesService.uploadImage(this.image);
+    try {
+      await this.imagesService.uploadImage(this.image);
+    } catch (errRes) {
+       const error = (errRes as HttpErrorResponse).error;
+
+        this.dialog.open(GenericErrorModalComponent, {
+          data: error.message,
+          width: '500px',
+          height: '250px',
+        })
+    }
     this.dialogRef.close();
   }
 }
