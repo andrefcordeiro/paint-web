@@ -44,7 +44,7 @@ export class SignUpComponent {
           return;
         }
 
-        localStorage.setItem('acessToken', resp?.accessToken);
+        localStorage.setItem('accessToken', resp?.accessToken);
         localStorage.setItem('user', JSON.stringify(resp?.user));
         this.router.navigateByUrl('/profile')
         

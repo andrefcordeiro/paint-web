@@ -20,7 +20,7 @@ export class UsersService {
   }
 
   logout() {
-    localStorage.removeItem('acessToken');
+    localStorage.removeItem('accessToken');
     localStorage.removeItem('user');
   }
 }

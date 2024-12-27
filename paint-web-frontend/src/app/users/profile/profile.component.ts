@@ -25,8 +25,9 @@ export class ProfileComponent implements OnInit {
     this.user = JSON.parse(localStorage.getItem('user')!);
     if (!this.user) {
       this.router.navigateByUrl('/sign-in')
+    } else {
+      this.images = await this.imagesService.getImagesByUser(this.user.id);
     }
-    this.images = await this.imagesService.getImagesByUser(this.user.id);
   }
 
   logout() {

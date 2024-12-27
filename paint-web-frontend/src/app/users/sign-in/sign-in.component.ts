@@ -60,7 +60,7 @@ export class SignInComponent {
           return;
         }
 
-        localStorage.setItem('acessToken', res?.accessToken);
+        localStorage.setItem('accessToken', res?.accessToken);
         localStorage.setItem('user', JSON.stringify(res?.user));
         this.router.navigateByUrl('/profile')
         
