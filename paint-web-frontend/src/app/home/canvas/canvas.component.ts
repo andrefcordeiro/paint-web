@@ -10,7 +10,7 @@ import { Rectangle } from './shapes/rectangle';
 import { Line } from './shapes/line';
 import { Shape } from './shapes/shape';
 import { ToolButton } from '../../interfaces/tool-button.interface';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, debounceTime } from 'rxjs';
 import { CaretakerService } from '../services/canvas-state-management/caretaker.service';
 import { Memento } from '../services/canvas-state-management/memento.interface';
 import { ModalSaveImageComponent } from './modal-save-image/modal-save-image.component';
@@ -154,6 +154,11 @@ export class CanvasComponent {
   private drawingOperationSubject = new BehaviorSubject<DrawOperation | ''>('');
 
   /**
+   * Subject to control the saving of canvas status on localstorage.
+   */
+  private storeCanvasSubject = new BehaviorSubject<DrawOperation | ''>('');
+
+  /**
    * Returns the nativeElement of the canvas.
    */
   get canvasElement(): HTMLCanvasElement {
@@ -175,6 +180,11 @@ export class CanvasComponent {
     this.initializeCanvasToolsState();
   }
 
+  ngOnDestroy() {
+    this.storeCanvasOnLocalStorage();
+  }
+
+
   ngAfterViewInit() {
     this.createCanvas();
 
@@ -184,6 +194,15 @@ export class CanvasComponent {
       else
         this.renderer.setStyle(this.canvasElement, 'cursor', 'url("../../../assets/icons/circle-cursor.cur"), auto');
     });
+
+    
+    const canvasState: CanvasState = JSON.parse(localStorage.getItem('canvasState')!);
+    if (canvasState) {
+      this.canvasState = canvasState;
+      this.redrawContent(canvasState.shapes);
+    }
+    
+    this.createStoreCanvasStateSubject();
 
     this.createDrawingOperationSubject();
   }
@@ -235,8 +254,28 @@ export class CanvasComponent {
         default:
           break;
       }
-      this.context.restore()
+      this.context.restore();
+
+      this.storeCanvasSubject.next('');
     })
+  }
+
+  /**
+   * Function to create the saving canvas state subscription to draw the content on canvas.
+   */
+  private createStoreCanvasStateSubject() {
+    this.storeCanvasSubject.pipe(
+      debounceTime(300)
+    ).subscribe(() => {
+      this.storeCanvasOnLocalStorage();
+    });
+  }
+
+  /**
+   * Method to store the canvas state on local storage.
+   */
+  private storeCanvasOnLocalStorage() {
+    localStorage.setItem('canvasState', JSON.stringify(this.canvasState));
   }
 
   /**

@@ -54,12 +54,12 @@ export class CaretakerService {
       return acc + cm.getLatestOperation() + ' ';
     }, '');
     // console.log(`this.mementos (${operation}) ->`, this.mementos)
-    console.log(`mementos (${operation}) -> ${str1}`);
+    // console.log(`mementos (${operation}) -> ${str1}`);
 
     const str2 = this.pastMementos.reduce((acc, cm) => {
       return acc + cm.getLatestOperation() + ' ';
     }, '');
     // console.log(`this.pastMementos (${operation}) ->`, this.pastMementos)
-    console.log(`pastMementos (${operation}) -> ${str2}`);
+    // console.log(`pastMementos (${operation}) -> ${str2}`);
   }
 }
