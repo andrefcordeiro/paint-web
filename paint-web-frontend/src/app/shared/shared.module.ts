@@ -9,9 +9,15 @@ import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialogActions, MatDialogClose, MatDialogContent, MatDialogModule, MatDialogTitle } from '@angular/material/dialog';
 import { GenericErrorModalComponent } from './generic-error-modal/generic-error-modal.component';
+import { OptionsComponent } from './options/options.component';
+import { OverlayModule } from '@angular/cdk/overlay';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 @NgModule({
-  declarations: [GenericErrorModalComponent],
+  declarations: [
+    GenericErrorModalComponent,
+    OptionsComponent,
+  ],
   imports: [
     CommonModule,
     MatInputModule,
@@ -26,6 +32,10 @@ import { GenericErrorModalComponent } from './generic-error-modal/generic-error-
     MatDialogContent,
     MatDialogActions,
     MatDialogClose,
+    OverlayModule,
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
   ],
   exports: [
     CommonModule,
@@ -41,7 +51,12 @@ import { GenericErrorModalComponent } from './generic-error-modal/generic-error-
     MatDialogContent,
     MatDialogActions,
     MatDialogClose,
-    GenericErrorModalComponent
+    GenericErrorModalComponent,
+    OptionsComponent,
+    OverlayModule,
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
   ]
 })
 export class SharedModule { }
