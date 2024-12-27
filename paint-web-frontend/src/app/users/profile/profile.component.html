@@ -13,9 +13,14 @@
     <mat-card *ngFor="let image of images">
       <mat-card-header>
         <p> {{ image.url.split('drawings/')[1] }} </p>
-        <button (click)="deleteImage(image.id)">
-          <mat-icon>close</mat-icon>
-        </button>
+        <div>
+          <button (click)="downloadImage(image.url)">
+            <mat-icon>get_app icon</mat-icon>
+          </button>
+          <button (click)="deleteImage(image.id)">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
       </mat-card-header>
       <img mat-card-image src="{{ image.url }}" alt="Put image name">
     </mat-card>

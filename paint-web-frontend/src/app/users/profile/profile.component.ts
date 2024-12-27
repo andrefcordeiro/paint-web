@@ -38,4 +38,23 @@ export class ProfileComponent implements OnInit {
     await this.imagesService.deleteImage(imageId);
     this.images = await this.imagesService.getImagesByUser(this.user.id);
   }
+
+  /**
+   * Function called to download the canvas content as an image.
+   */
+  async downloadImage(imageUrl: string) {
+    const response = await fetch(imageUrl, { mode: 'cors' });
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+
+    const filename = imageUrl.substring(imageUrl.lastIndexOf('/') + 1);
+    link.download = filename;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 }
