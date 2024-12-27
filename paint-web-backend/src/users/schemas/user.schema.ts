@@ -4,7 +4,7 @@ import { RemoveDefaultMongoIdPlugin } from 'src/utils/remove-default-mongo-id.pl
 
 export type UserDocument = HydratedDocument<User>;
 
-@Schema()
+@Schema({ timestamps: true })
 export class User {
   @Prop()
   name: string;

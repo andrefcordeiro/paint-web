@@ -1,0 +1,28 @@
+<app-options></app-options>
+
+<div id="page-container" *ngIf="user">
+  <div id="header">
+    <h1>{{ user.name }}</h1> 
+    <p> {{ "@" + user.username }}</p>
+    <p>Joined {{ user.createdAt | date: 'dd/MM/yyyy'}}</p>
+
+    <button class="form-button" mat-button (click)="logout()"> Log out </button>
+  </div>
+
+  <div id="images" *ngIf="images">
+    <mat-card *ngFor="let image of images">
+      <mat-card-header>
+        <p> {{ image.url.split('drawings/')[1] }} </p>
+        <div>
+          <button (click)="downloadImage(image.url)">
+            <mat-icon>get_app icon</mat-icon>
+          </button>
+          <button (click)="deleteImage(image.id)">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+      </mat-card-header>
+      <img mat-card-image src="{{ image.url }}" alt="Put image name">
+    </mat-card>
+  </div>
+</div>

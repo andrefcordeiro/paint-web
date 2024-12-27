@@ -8,3 +8,14 @@ body {
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+
+.form-button {
+  height: 50px !important;
+}
+
+.form-button-black {
+  @extend .form-button;
+  color: white !important;
+  background-color: black !important;
+}

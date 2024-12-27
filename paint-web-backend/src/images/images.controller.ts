@@ -9,6 +9,7 @@ import {
   Get,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { ImagesService } from './images.service';
 import {
@@ -18,6 +19,7 @@ import {
 import multerConfig from './multer-config';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { UsersService } from 'src/users/users.service';
+import multerConfigLocal from './multer-config-local';
 
 /**
  * Images endpoints.
@@ -29,32 +31,48 @@ export class ImagesController {
     private readonly userService: UsersService,
   ) {}
 
+  /**
+   *  Save images on S3.
+   *
+   */
+  // @Post()
+  // @UseGuards(AuthGuard)
+  // @UseInterceptors(FileInterceptor('image', multerConfig))
+  // async uploadImage(
+  //   @UploadedFile() image: Express.MulterS3.File,
+  //   @Req() req: Request,
+  // ) {
+  //   const user = await this.userService.findByUsername(req['user'].username);
+  //   return this.imagesService.saveImage(user.id, image);
+  // }
+
+  // @Post('multiple')
+  // @UseGuards(AuthGuard)
+  // @UseInterceptors(FileFieldsInterceptor([{ name: 'images' }], multerConfig))
+  // async uploadMultipleImages(
+  //   @UploadedFiles()
+  //   images: Express.MulterS3.File[],
+  //   @Req() req: Request,
+  // ) {
+  //   const user = await this.userService.findByUsername(req['user'].username);
+  //   return this.imagesService.saveImages(user.id, images);
+  // }
+
+  /**
+   *  Save images locally.
+   *
+   */
   @Post()
   @UseGuards(AuthGuard)
-  @UseInterceptors(FileInterceptor('image', multerConfig))
-  async uploadImage(
-    @UploadedFile() image: Express.MulterS3.File,
-    @Req() req: Request,
-  ) {
+  @UseInterceptors(FileInterceptor('image', multerConfigLocal))
+  async uploadImage(@UploadedFile() image, @Req() req: Request) {
     const user = await this.userService.findByUsername(req['user'].username);
-    return this.imagesService.saveImage(user.id, image);
+    return this.imagesService.saveImageLocally(user.id, image);
   }
 
-  @Post('multiple')
+  @Get()
   @UseGuards(AuthGuard)
-  @UseInterceptors(FileFieldsInterceptor([{ name: 'images' }], multerConfig))
-  async uploadMultipleImages(
-    @UploadedFiles()
-    images: Express.MulterS3.File[],
-    @Req() req: Request,
-  ) {
-    const user = await this.userService.findByUsername(req['user'].username);
-    return this.imagesService.saveImages(user.id, images);
-  }
-
-  @Get(':userId')
-  @UseGuards(AuthGuard)
-  getImagesByUserId(@Param('userId') userId: string) {
+  getImagesByUserId(@Query('user-id') userId: string) {
     return this.imagesService.findByUserId(userId);
   }
 

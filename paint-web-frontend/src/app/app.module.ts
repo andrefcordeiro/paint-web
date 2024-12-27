@@ -1,51 +1,37 @@
 import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
 
 import { AppComponent } from './app.component';
-import { CanvasComponent } from './components/canvas/canvas.component';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { UsersModule } from './users/users.module';
+import { AppRoutingModule } from './app-routing.module';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { ModalToolPropertiesComponent } from '../app/components/canvas/modal-tool-properties/modal-tool-properties.component';
-import { MatDialogModule } from '@angular/material/dialog';
-import { MatSliderModule } from '@angular/material/slider';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatCardModule } from '@angular/material/card';
-import { ReactiveFormsModule } from '@angular/forms';
-import { CaretakerService } from './services/state-management/caretaker.service';
-import { ToolbarComponent } from './components/canvas/toolbar/toolbar.component';
-import { DragDropModule } from '@angular/cdk/drag-drop';
-import { MultiToolButtonComponent } from './components/canvas/toolbar/multi-tool-button/multi-tool-button.component';
-import { OverlayModule } from '@angular/cdk/overlay';
-import { OptionsComponent } from './components/options/options.component';
-import {MatListModule} from '@angular/material/list';
+import { BrowserModule } from '@angular/platform-browser';
+import { HomeModule } from './home/home.module';
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { AuthInterceptor } from './http.interceptor';
+
 
 @NgModule({
   declarations: [
     AppComponent,
-    CanvasComponent,
-    ModalToolPropertiesComponent,
-    ToolbarComponent,
-    MultiToolButtonComponent,
-    OptionsComponent,
   ],
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
-    MatIconModule,
-    MatButtonModule,
-    MatDialogModule,
-    MatSliderModule,
-    MatInputModule,
-    MatFormFieldModule,
-    MatCardModule,
-    ReactiveFormsModule,
-    DragDropModule,
-    OverlayModule,
-    MatListModule,
+    HomeModule,
+    UsersModule,
+    AppRoutingModule,
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
   ],
-  providers: [CaretakerService],
   bootstrap: [AppComponent],
+  providers: [
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptor,
+      multi: true,
+    },
+  ],
 })
-export class AppModule {}
+export class AppModule { }

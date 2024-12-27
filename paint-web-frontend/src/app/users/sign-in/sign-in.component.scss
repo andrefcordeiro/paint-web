@@ -1,0 +1,30 @@
+#page-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+h1 {
+  margin: 0 0 40px;
+}
+
+mat-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 30%;
+  padding: 30px;
+  gap: 20px;
+  
+  span {
+    align-self: center;
+  }
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+}

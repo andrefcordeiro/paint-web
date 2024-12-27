@@ -1,0 +1,29 @@
+<app-options></app-options>
+
+<div id="page-container">
+  <mat-card>
+    <h1><strong>Login</strong></h1>
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <mat-form-field>
+        <mat-label>Username</mat-label>
+        <input matInput formControlName="username">
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Password</mat-label>
+        <input matInput type="password" formControlName="password">
+        <mat-error *ngIf="passwordErrorMessage"> {{ passwordErrorMessage }} </mat-error>
+      </mat-form-field>
+      
+      <mat-error *ngIf="errorMessage"> {{ errorMessage }} </mat-error>
+
+      <button mat-button [disabled]="!form.valid" class="form-button">
+        Login
+      </button>
+    </form>
+    <span> or </span>
+  
+    <button mat-button (click)="navigateToSignUpPage()" class="form-button-black">
+      Create account
+    </button>
+  </mat-card>
+</div>

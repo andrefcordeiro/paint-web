@@ -1,0 +1,13 @@
+<div id="page-container">
+  <h1><strong>Save image</strong></h1>
+  <form [formGroup]="form" (ngSubmit)="saveImage()">
+    <mat-form-field>
+      <mat-label>File name: </mat-label>
+      <input matInput type="fileName" formControlName="fileName">
+    </mat-form-field>
+    
+    <button mat-button [disabled]="!form.valid" class="form-button">
+      Save
+    </button>
+  </form>
+</div>

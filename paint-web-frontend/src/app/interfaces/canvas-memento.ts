@@ -1,5 +1,5 @@
+import { Memento } from '../home/services/canvas-state-management/memento.interface';
 import { CanvasState } from './canvas-state';
-import { Memento } from '../services/state-management/memento.interface';
 
 export class CanvasMemento implements Memento {
   private state: CanvasState;

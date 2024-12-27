@@ -7,7 +7,7 @@ import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
-import { User } from 'src/users/entities/user.entity';
+import { UserDto } from 'src/users/dto/user.dto';
 
 @Injectable()
 export class AuthService {
@@ -26,36 +26,46 @@ export class AuthService {
   async signIn(
     username: string,
     pass: string,
-  ): Promise<{ access_token: string }> {
+  ): Promise<{ user: UserDto; accessToken: string }> {
     const user = await this.usersService.findByUsername(username);
-    const isMatch = await bcrypt.compare(pass, user.password);
 
-    if (!isMatch) {
-      throw new UnauthorizedException();
+    if (user) {
+      const isMatch = await bcrypt.compare(pass, user.password);
+
+      if (isMatch) {
+        const payload = { sub: user.id, username: user.username };
+        const userDto = UserDto.fromDomain(user);
+        return {
+          user: userDto,
+          accessToken: await this.jwtService.signAsync(payload),
+        };
+      }
     }
-    const payload = { sub: user.id, username: user.username };
-    return {
-      access_token: await this.jwtService.signAsync(payload),
-    };
+
+    throw new UnauthorizedException(
+      'User with this username and password does not exists.',
+    );
   }
 
   /**
    * Method that handles user creation.
    *
    * @param createUserDto User's data.
-   * @returns { Promise<User> } User created.
+   * @returns { Promise<UserDto> } User created.
    */
-  async signUp(createUserDto: CreateUserDto): Promise<User> {
+  async signUp(createUserDto: CreateUserDto): Promise<UserDto> {
     createUserDto.password = await this.encryptPassword(createUserDto.password);
     try {
       const user = await this.usersService.create(createUserDto);
-      return user;
+      const userDto = UserDto.fromDomain(user);
+
+      return userDto;
     } catch (error) {
-      let message = 'Conflict Error';
+      let message = 'Conflict Error.';
       if (error.message.includes('unique_email')) {
-        message = 'Email already exists';
+        message = 'The email address is already registered.';
       } else if (error.message.includes('unique_username')) {
-        message = 'Username already exists';
+        message = 'Username already exists.';
       }
       throw new ConflictException(message);
     }
