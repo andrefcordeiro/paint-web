@@ -495,6 +495,7 @@ export class CanvasComponent {
     // removing stored shapes
     this.canvasState.shapes = [];
     this.canvasState.shapes.push(rect);
+    this.storeCanvasSubject.next('');
   }
 
   /**
