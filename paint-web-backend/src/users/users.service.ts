@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { User } from './entities/user.entity';
 import { Model } from 'mongoose';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { User } from './schemas/user.schema';
 
 @Injectable()
 export class UsersService {
@@ -11,7 +11,6 @@ export class UsersService {
 
   create(createUserDto: CreateUserDto) {
     const createdUser = new this.userModel(createUserDto);
-    createdUser.createdAt = new Date();
     return createdUser.save();
   }
 

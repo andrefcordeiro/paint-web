@@ -1,31 +1,23 @@
-import { IsEmail, IsNotEmpty } from 'class-validator';
-import { User } from '../entities/user.entity';
 import { Types } from 'mongoose';
+import { Exclude, Expose } from 'class-transformer';
 
+@Exclude()
 export class UserDto {
-  static fromDomain(user: User): UserDto {
-    return {
-      id: user.id,
-      name: user.name,
-      username: user.username,
-      email: user.email,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    };
-  }
-
+  @Expose()
   id: Types.ObjectId;
 
-  @IsNotEmpty()
+  @Expose()
   name: string;
 
-  @IsNotEmpty()
+  @Expose()
   username: string;
 
-  @IsEmail()
+  @Expose()
   email: string;
 
+  @Expose()
   createdAt: Date;
 
+  @Expose()
   updatedAt: Date;
 }

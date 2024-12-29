@@ -8,6 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
 import { UserDto } from 'src/users/dto/user.dto';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class AuthService {
@@ -21,7 +22,7 @@ export class AuthService {
    *
    * @param username Username.
    * @param pass Password.
-   * @returns { Promise<{ access_token: string }> } JSON Web Token.
+   * @returns { Promise<{ user: UserDto, accessToken: string }> } User and the JSON Web Token.
    */
   async signIn(
     username: string,
@@ -34,7 +35,7 @@ export class AuthService {
 
       if (isMatch) {
         const payload = { sub: user.id, username: user.username };
-        const userDto = UserDto.fromDomain(user);
+        const userDto = plainToInstance(UserDto, user);
         return {
           user: userDto,
           accessToken: await this.jwtService.signAsync(payload),
@@ -57,14 +58,13 @@ export class AuthService {
     createUserDto.password = await this.encryptPassword(createUserDto.password);
     try {
       const user = await this.usersService.create(createUserDto);
-      const userDto = UserDto.fromDomain(user);
 
-      return userDto;
+      return plainToInstance(UserDto, user);
     } catch (error) {
       let message = 'Conflict Error.';
-      if (error.message.includes('unique_email')) {
+      if (error.message.includes('email')) {
         message = 'The email address is already registered.';
-      } else if (error.message.includes('unique_username')) {
+      } else if (error.message.includes('username')) {
         message = 'Username already exists.';
       }
       throw new ConflictException(message);
