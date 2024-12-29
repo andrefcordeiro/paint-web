@@ -5,8 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ImageFile } from './entities/image-file.entity';
 import { UsersModule } from 'src/users/users.module';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ImageSchema } from './schemas/image.schema';
-import { Image } from './entities/image.entity';
+import { Image, ImageSchema } from './schemas/image.schema';
 import { ImageFilesService } from './images-file/images-file.service';
 
 @Module({

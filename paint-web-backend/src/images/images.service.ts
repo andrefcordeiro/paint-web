@@ -8,8 +8,8 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { ImageFilesService } from './images-file/images-file.service';
-import { Image } from './entities/image.entity';
 import { CreateImageDto } from './dto/create-image.dto';
+import { Image } from './schemas/image.schema';
 
 @Injectable()
 export class ImagesService {
