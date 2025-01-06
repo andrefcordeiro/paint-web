@@ -1,0 +1,32 @@
+version: "3.8"
+services:
+  frontend:
+    build:
+      context: ./paint-web-frontend
+      dockerfile: Dockerfile
+    ports:
+      - "4200:80" # Maps Angular's service to localhost:4200
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./paint-web-backend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000" # Maps NestJS service to localhost:3000
+    depends_on:
+      - mongo
+    environment:
+      - MONGO_CONNECTION_URI=mongodb://mongodb:27017/paint_web
+
+  mongo:
+    image: mongo
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:

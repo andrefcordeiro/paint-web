@@ -1,0 +1,13 @@
+# Use Node.js to build the Angular app
+FROM node:22.12.0 AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+
+# Use Nginx to serve the Angular app
+FROM nginx:alpine
+COPY --from=build /app/dist/paint-web-frontend/browser /usr/share/nginx/html
+EXPOSE 4200
+CMD ["nginx", "-g", "daemon off;"]
