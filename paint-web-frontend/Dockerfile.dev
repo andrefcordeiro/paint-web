@@ -1,0 +1,9 @@
+# Use Node.js as the base image for development
+FROM node:22.12.0 AS dev
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+
+# Run Angular dev server
+CMD ["npm", "start"]

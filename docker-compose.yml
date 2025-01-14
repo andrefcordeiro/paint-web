@@ -1,9 +1,8 @@
-version: "3.8"
 services:
   frontend:
     build:
       context: ./paint-web-frontend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.${ENVIRONMENT}
     ports:
       - "4200:80" # Maps Angular's service to localhost:4200
     depends_on:
@@ -18,7 +17,7 @@ services:
     depends_on:
       - mongo
     environment:
-      - MONGO_CONNECTION_URI=mongodb://mongodb:27017/paint_web
+      - MONGO_CONNECTION_URI=mongodb://mongodb:27017/paint_web # using mongodb (container_name) instead localhost
 
   mongo:
     image: mongo
