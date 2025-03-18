@@ -44,16 +44,12 @@ export class ProfileComponent implements OnInit {
    * Function called to download the canvas content as an image.
    */
   async downloadImage(imageUrl: string) {
-    const response = await fetch(imageUrl, { mode: 'cors' });
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
+    const filename = imageUrl.substring(imageUrl.lastIndexOf('/') + 1);
 
     const link = document.createElement('a');
-    link.href = url;
-
-    const filename = imageUrl.substring(imageUrl.lastIndexOf('/') + 1);
+    link.href = imageUrl;
     link.download = filename;
-
+    link.target = '_blank'; // Open in a new tab if needed
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
